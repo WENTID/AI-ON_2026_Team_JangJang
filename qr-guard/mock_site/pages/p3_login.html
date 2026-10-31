@@ -1,0 +1,30 @@
+<!doctype html>
+<!-- 테스트용 가짜 페이지 (P3: 피싱 - 카카오페이 사칭 로그인 + OTP). 입력값을 저장·전송하지 않음 -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>카카오페이 | 간편결제 로그인</title>
+<style>
+  body { font-family: sans-serif; background: #fffbe6; margin: 0; }
+  main { max-width: 380px; margin: 40px auto; background: #fff; padding: 28px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+  .logo { font-size: 26px; font-weight: 900; color: #191919; background: #ffeb00; display: inline-block; padding: 4px 12px; border-radius: 6px; }
+  input { width: 100%; padding: 11px; margin-top: 10px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; }
+  button { margin-top: 18px; width: 100%; padding: 12px; background: #ffeb00; color: #191919; border: 0; border-radius: 6px; font-size: 16px; font-weight: bold; }
+  .small { font-size: 13px; color: #777; }
+</style>
+</head>
+<body>
+<main>
+  <div class="logo">kakaopay</div>
+  <h3>간편결제를 위해 로그인해 주세요</h3>
+  <p class="small">보안 강화를 위해 로그인 후 휴대폰으로 받은 인증번호(OTP)를 입력해야 결제가 진행됩니다.</p>
+  <form action="#" method="post" onsubmit="return false;">
+    <input type="text" name="login_id" placeholder="카카오계정 (이메일 또는 전화번호)">
+    <input type="password" name="login_pw" placeholder="비밀번호">
+    <input type="text" name="otp" placeholder="인증번호 6자리 (OTP)">
+    <button type="submit">로그인 후 결제</button>
+  </form>
+</main>
+</body>
+</html>

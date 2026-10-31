@@ -1,0 +1,27 @@
+<!doctype html>
+<!-- 테스트용 가짜 페이지 -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>qr-guard 가짜 테스트 페이지 목록</title>
+<style>
+  body { font-family: sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; line-height: 1.6; }
+  code { background: #f2f2f2; padding: 1px 5px; border-radius: 4px; }
+  li { margin: 6px 0; }
+</style>
+</head>
+<body>
+<h1>qr-guard 가짜 테스트 페이지</h1>
+<p>모든 페이지는 테스트용 가짜이며, 입력값을 저장하거나 전송하지 않습니다. 도메인과 기관명은 모두 가상입니다.</p>
+<ul>
+  <li>N1 정상 · <a href="/n1/pay">/n1/pay</a> — 새솔시 공영주차장 결제 (로그인)</li>
+  <li>N2 정상 · <a href="/n2/t/7">/n2/t/7</a> — 테이블 주문 (<code>/n2/short</code> 는 302 리다이렉트)</li>
+  <li>P1 피싱 · <a href="/p1/pay">/p1/pay</a> — 주차요금 사칭, 카드 비밀번호·주민번호 요구</li>
+  <li>P2 피싱 · <a href="/p2/app">/p2/app</a> — 택배 재배송, APK 설치 유도 (<code>/p2/install</code> 은 APK 헤더)</li>
+  <li>P3 피싱 · <a href="/p3/login">/p3/login</a> — 카카오페이 사칭 로그인 + OTP</li>
+  <li>P4 피싱 · <a href="/p4/bill">/p4/bill</a> — 관리비 미납, 계좌 비밀번호 요구</li>
+  <li>A1 애매 · <a href="/a1/login">/a1/login</a> — 쇼핑몰 로그인 (<code>/a1/short</code> 는 302 리다이렉트)</li>
+  <li>A2 애매 · <a href="/a2/join">/a2/join</a> — 카페 Wi-Fi, 휴대폰 번호 + 마케팅 동의</li>
+</ul>
+</body>
+</html>

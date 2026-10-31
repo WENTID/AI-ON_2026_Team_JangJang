@@ -1,0 +1,36 @@
+<!doctype html>
+<!-- 테스트용 가짜 페이지 (N2: 정상 - 식당 테이블 주문). 가게·도메인은 가상이며 입력값을 저장·전송하지 않음 -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>민트테이블 - 7번 테이블 주문</title>
+<style>
+  body { font-family: sans-serif; background: #f7fbf8; margin: 0; }
+  header { background: #2e9e6b; color: #fff; padding: 14px 20px; font-weight: bold; }
+  main { max-width: 420px; margin: 20px auto; padding: 0 16px; }
+  .item { background: #fff; border-radius: 8px; padding: 12px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; }
+  select, textarea { padding: 6px; border: 1px solid #cdd; border-radius: 6px; }
+  textarea { width: 100%; box-sizing: border-box; height: 70px; }
+  button { margin-top: 14px; width: 100%; padding: 12px; background: #2e9e6b; color: #fff; border: 0; border-radius: 6px; font-size: 16px; }
+</style>
+</head>
+<body>
+<header>민트테이블 · 테이블 7번</header>
+<main>
+  <h2>메뉴 주문</h2>
+  <p>원하는 메뉴의 수량을 고른 뒤 주문하기를 누르세요. 결제는 식사 후 카운터에서 합니다.</p>
+  <form action="#" method="post" onsubmit="return false;">
+    <div class="item"><span>김치찌개 9,000원</span>
+      <select name="menu_kimchi"><option>0</option><option>1</option><option>2</option></select></div>
+    <div class="item"><span>제육볶음 10,000원</span>
+      <select name="menu_jeyuk"><option>0</option><option>1</option><option>2</option></select></div>
+    <div class="item"><span>공깃밥 1,000원</span>
+      <select name="menu_rice"><option>0</option><option>1</option><option>2</option></select></div>
+    <label for="request">요청사항</label>
+    <textarea id="request" name="request" placeholder="예: 덜 맵게 해주세요"></textarea>
+    <button type="submit">주문하기</button>
+  </form>
+</main>
+</body>
+</html>

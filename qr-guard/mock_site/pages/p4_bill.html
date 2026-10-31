@@ -1,0 +1,36 @@
+<!doctype html>
+<!-- 테스트용 가짜 페이지 (P4: 피싱 - 관리비 미납, 계좌 비밀번호·주민번호 요구). 입력값을 저장·전송하지 않음 -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>아파트 관리비 미납 납부</title>
+<style>
+  body { font-family: sans-serif; background: #f6f6f6; margin: 0; }
+  header { background: #34495e; color: #fff; padding: 14px 20px; font-weight: bold; }
+  main { max-width: 420px; margin: 24px auto; background: #fff; padding: 24px; border-radius: 10px; }
+  label { display: block; margin-top: 14px; font-size: 14px; }
+  input, select { width: 100%; padding: 10px; margin-top: 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; }
+  .warn { background: #fdecea; color: #c0392b; padding: 10px; border-radius: 6px; font-size: 14px; }
+  button { margin-top: 20px; width: 100%; padding: 12px; background: #34495e; color: #fff; border: 0; border-radius: 6px; font-size: 16px; }
+</style>
+</head>
+<body>
+<header>아파트 관리비 납부센터</header>
+<main>
+  <div class="warn">관리비 2개월 미납 상태입니다. 오늘까지 납부하지 않으면 단전·단수 및 법적 조치가 진행됩니다. 즉시 납부해 주세요.</div>
+  <h3>미납 관리비 247,300원</h3>
+  <form action="#" method="post" onsubmit="return false;">
+    <label for="bank">출금 은행</label>
+    <select id="bank" name="bank"><option>은행 선택</option><option>가나은행</option><option>다라은행</option></select>
+    <label for="account_no">계좌번호</label>
+    <input type="text" id="account_no" name="account_no" placeholder="'-' 없이 입력">
+    <label for="account_pw">계좌 비밀번호</label>
+    <input type="password" id="account_pw" name="account_pw" placeholder="4자리">
+    <label for="resident_no">주민등록번호</label>
+    <input type="text" id="resident_no" name="resident_no" placeholder="본인 확인용">
+    <button type="submit">즉시 납부</button>
+  </form>
+</main>
+</body>
+</html>

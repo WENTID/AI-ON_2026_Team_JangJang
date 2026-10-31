@@ -1,0 +1,37 @@
+<!doctype html>
+<!-- 테스트용 가짜 페이지 (N1: 정상 - 새솔시 공영주차장 요금 결제). 기관·도메인은 가상이며 입력값을 저장·전송하지 않음 -->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>새솔시 공영주차장 요금 정산</title>
+<style>
+  body { font-family: sans-serif; background: #f4f7fb; margin: 0; }
+  header { background: #1f5fa8; color: #fff; padding: 14px 20px; font-weight: bold; }
+  main { max-width: 420px; margin: 24px auto; background: #fff; padding: 24px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+  label { display: block; margin-top: 14px; font-size: 14px; color: #333; }
+  input { width: 100%; padding: 10px; margin-top: 4px; box-sizing: border-box; border: 1px solid #ccd; border-radius: 6px; }
+  button { margin-top: 20px; width: 100%; padding: 12px; background: #1f5fa8; color: #fff; border: 0; border-radius: 6px; font-size: 16px; }
+  .note { font-size: 13px; color: #666; }
+  footer { text-align: center; font-size: 12px; color: #888; padding: 20px; }
+</style>
+</head>
+<body>
+<header>새솔시청 · 공영주차장 통합 정산</header>
+<main>
+  <h2>주차요금 결제</h2>
+  <p class="note">새솔시 통합회원으로 로그인한 뒤 차량번호를 입력하면 주차 시간과 요금이 조회됩니다. 결제는 등록된 간편결제 수단으로 진행됩니다.</p>
+  <form action="#" method="post" onsubmit="return false;">
+    <label for="user_id">아이디</label>
+    <input type="text" id="user_id" name="user_id" placeholder="새솔시 통합회원 아이디">
+    <label for="user_pw">비밀번호</label>
+    <input type="password" id="user_pw" name="user_pw" placeholder="비밀번호">
+    <label for="car_no">차량번호</label>
+    <input type="text" id="car_no" name="car_no" placeholder="예: 12가 3456">
+    <button type="submit">요금 조회</button>
+  </form>
+  <p class="note">문의: 새솔시 교통정책과 (대표번호 안내는 시청 홈페이지 참고)</p>
+</main>
+<footer>© 새솔시청. 모든 권리 보유.</footer>
+</body>
+</html>

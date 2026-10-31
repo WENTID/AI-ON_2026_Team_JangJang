@@ -1,0 +1,17 @@
+[
+  {"name": "카카오페이", "keywords": ["kakaopay"], "domains": ["kakaopay.com"]},
+  {"name": "카카오", "keywords": ["kakao"], "domains": ["kakao.com", "kakaopay.com", "kakaobank.com", "kakaocorp.com"]},
+  {"name": "네이버", "keywords": ["naver"], "domains": ["naver.com", "naver.me"]},
+  {"name": "토스", "keywords": ["tossbank", "toss-"], "domains": ["toss.im", "tossbank.com"]},
+  {"name": "KB국민은행", "keywords": ["kbstar", "kbbank", "kbcard"], "domains": ["kbstar.com", "kbcard.com"]},
+  {"name": "신한은행", "keywords": ["shinhan"], "domains": ["shinhan.com", "shinhancard.com"]},
+  {"name": "우리은행", "keywords": ["wooribank", "wooricard"], "domains": ["wooribank.com", "wooricard.com"]},
+  {"name": "하나은행", "keywords": ["hanabank", "hanacard"], "domains": ["kebhana.com", "hanacard.co.kr"]},
+  {"name": "NH농협", "keywords": ["nonghyup", "nhbank"], "domains": ["nonghyup.com", "nhbank.com"]},
+  {"name": "우체국", "keywords": ["epost"], "domains": ["epost.go.kr"]},
+  {"name": "CJ대한통운", "keywords": ["cjlogistics", "doortodoor"], "domains": ["cjlogistics.com"]},
+  {"name": "쿠팡", "keywords": ["coupang"], "domains": ["coupang.com"]},
+  {"name": "국세청 홈택스", "keywords": ["hometax"], "domains": ["hometax.go.kr", "nts.go.kr"]},
+  {"name": "정부24", "keywords": ["gov24"], "domains": ["gov.kr"]},
+  {"name": "경찰청", "keywords": ["efine", "police"], "domains": ["police.go.kr", "efine.go.kr"]}
+]

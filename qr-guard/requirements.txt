@@ -1,0 +1,15 @@
+# QR 피싱 판별 서비스 (qr-guard) 의존성
+# 설치: pip install -r requirements.txt
+
+streamlit>=1.40        # 데모 화면
+opencv-python>=4.9     # QR 해독 (cv2.QRCodeDetector)
+numpy>=1.26            # 이미지 바이트 → 배열 변환
+httpx>=0.27            # 리다이렉트 추적 (자동 리다이렉트 끔)
+beautifulsoup4>=4.12   # HTML 분석
+tldextract>=5.1        # 등록 도메인 / 서브도메인 분리
+anthropic>=0.70        # LLM 판정 (analyzer.py 에서만 사용)
+flask>=3.0             # 가짜 테스트 페이지 서버
+pandas>=2.1            # 평가 결과표
+python-dotenv>=1.0     # .env 읽기
+qrcode[pil]>=7.4       # 예시 QR 이미지 생성 (테스트·시연용)
+pytest>=8.0            # 테스트

@@ -5,34 +5,21 @@ QR 코드를 찍기 전에, **QR 옆 안내 문구**와 **실제 연결 페이�
 
 판정 등급: **안전(SAFE) / 주의(CAUTION) / 위험(DANGER) / 판단 보류(UNKNOWN)**
 
-## 설치
+> 👉 **처음 실행한다면 [GETTING_STARTED.md](GETTING_STARTED.md)를 순서대로 따라 하세요.** (프로그램 설치부터 VS Code 실행까지)
 
-Python 3.10~3.12를 권장합니다. 3.13 이상에서는 opencv 설치가 안 될 수 있습니다.
+## 빠른 시작 (윈도우)
 
-```bash
-# 가상환경 만들기 (윈도우는 py -3.11 -m venv .venv 처럼 버전 지정 가능)
-python -m venv .venv
-# 활성화
-.venv\Scripts\activate        # 윈도우
-source .venv/bin/activate     # 맥/리눅스
+Python 3.10~3.12가 필요합니다. 3.13 이상에서는 opencv 설치가 안 될 수 있습니다.
 
-pip install -r requirements.txt
+```powershell
+# 처음 한 번만: 설치
+py -3.11 -m venv .venv
+.venv\Scripts\python -m pip install -r requirements.txt
+copy .env.example .env        # .env 를 열어 ANTHROPIC_API_KEY 를 채우세요 (선택). 절대 커밋 금지.
 
-# API 키 설정 (LLM 판정에만 필요. 없어도 1~4단계 기능은 동작)
-copy .env.example .env        # 윈도우  (맥/리눅스: cp .env.example .env)
-# .env 를 열어 ANTHROPIC_API_KEY 를 채우세요. 절대 커밋하지 마세요.
-```
-
-## 실행
-
-터미널 두 개를 씁니다.
-
-```bash
-# 터미널 1: 가짜 테스트 페이지 서버 (http://127.0.0.1:5001)
-python mock_site/server.py
-
-# 터미널 2: 데모 화면
-streamlit run app.py
+# 실행: 터미널 두 개
+.venv\Scripts\python mock_site\server.py      # 터미널 1: 가짜 테스트 페이지 서버 (http://127.0.0.1:5001)
+.venv\Scripts\streamlit run app.py            # 터미널 2: 데모 화면 (http://localhost:8501)
 ```
 
 시연할 때는 화면의 **"테스트 시나리오 불러오기"**에서 `P1`을 고르고 **검사하기**를 누르세요.

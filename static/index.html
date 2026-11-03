@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QR 피싱 분석기</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <!-- jsQR: 카메라 영상에서 QR을 실시간으로 읽는 라이브러리 -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+</head>
+<body>
+<main>
+  <header>
+    <h1>QR 피싱 분석기</h1>
+    <p class="sub">QR코드 속 링크가 피싱 사이트인지 확인합니다</p>
+  </header>
+
+  <!-- 입력 화면 -->
+  <section id="input-view">
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="camera" role="tab">카메라</button>
+      <button class="tab" data-tab="upload" role="tab">이미지</button>
+      <button class="tab" data-tab="url" role="tab">URL 입력</button>
+    </div>
+
+    <div class="panel" id="panel-camera">
+      <div class="camera-box">
+        <video id="video" playsinline muted></video>
+        <canvas id="frame" hidden></canvas>
+        <div class="camera-hint">QR과 주변 안내문이 함께 보이도록 비춰 주세요</div>
+        <button id="camera-start" class="primary">카메라 켜기</button>
+      </div>
+      <p class="muted small" id="camera-msg"></p>
+    </div>
+
+    <div class="panel" id="panel-upload" hidden>
+      <label id="drop" class="drop">
+        <input type="file" id="file" accept="image/*" hidden>
+        <strong>QR 이미지를 끌어다 놓거나 눌러서 선택</strong>
+        <span class="muted small">QR 주변 안내문이 함께 찍힌 사진이면 더 좋습니다</span>
+      </label>
+      <div id="code-choices" hidden>
+        <p>이미지에서 QR코드 여러 개를 찾았습니다. 분석할 것을 선택하세요.</p>
+        <ul id="code-list"></ul>
+      </div>
+      <p class="error" id="upload-msg"></p>
+    </div>
+
+    <div class="panel" id="panel-url" hidden>
+      <form id="url-form" class="url-form">
+        <input id="url-input" type="text" inputmode="url" placeholder="https://example.com" autocomplete="off">
+        <button class="primary" type="submit">분석</button>
+      </form>
+      <p class="error" id="url-msg"></p>
+    </div>
+  </section>
+
+  <!-- 로딩 -->
+  <section id="loading-view" hidden>
+    <div class="spinner"></div>
+    <p class="muted">분석 중입니다…</p>
+  </section>
+
+  <!-- 결과 화면 -->
+  <section id="result-view" hidden>
+    <div id="verdict" class="verdict">
+      <div class="verdict-label" id="verdict-label"></div>
+      <div class="verdict-desc" id="verdict-desc"></div>
+      <span class="badge" id="notice-badge" hidden></span>
+    </div>
+
+    <div class="card urls">
+      <div><span class="k">분석한 주소</span><span class="v mono" id="r-input"></span></div>
+      <div id="r-final-row"><span class="k">최종 도착 주소</span><span class="v mono" id="r-final"></span></div>
+    </div>
+
+    <div class="card" id="risk-card">
+      <h2>판정 근거</h2>
+      <ul class="reasons" id="risk-top"></ul>
+      <details id="risk-more-wrap" hidden><summary>근거 더 보기</summary><ul class="reasons" id="risk-more"></ul></details>
+      <p class="muted small" id="risk-empty" hidden>위험 신호가 발견되지 않았습니다.</p>
+      <h3 id="safe-title" hidden>안전 근거</h3>
+      <ul class="reasons safe" id="safe-list"></ul>
+    </div>
+
+    <div class="card" id="notice-card" hidden>
+      <h2>기타 주의사항</h2>
+      <p class="muted small">피싱은 아니지만 확인이 필요한 점</p>
+      <ul class="reasons notice" id="notice-list"></ul>
+    </div>
+
+    <div class="card">
+      <h2>AI 페이지 분석</h2>
+      <div id="ai-body"></div>
+    </div>
+
+    <div class="card">
+      <h2>안내문 맥락 비교</h2>
+      <div class="compare">
+        <div><span class="k">QR 안내문 목적</span><span class="v" id="ctx-notice"></span></div>
+        <div><span class="k">실제 페이지 목적</span><span class="v" id="ctx-page"></span></div>
+      </div>
+      <p class="muted small" id="ctx-msg"></p>
+    </div>
+
+    <details class="card details">
+      <summary>상세 정보</summary>
+      <div id="detail-body"></div>
+    </details>
+
+    <button id="again" class="primary wide">다른 QR 검사하기</button>
+  </section>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>

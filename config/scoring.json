@@ -1,0 +1,49 @@
+{
+  "_설명": "피싱 점수 설정. tier: confirmed(확정, 즉시 위험) / strong(강한 신호) / weak(약한 신호, 합계 상한 적용) / safe(안전 신호, 감점) / fact(점수 없음, 조합 규칙 조건용)",
+  "thresholds": {
+    "caution": 30,
+    "danger": 60
+  },
+  "weak_cap": 45,
+  "signals": {
+    "phishing_db":            {"tier": "confirmed", "points": 0,  "label": "피싱 DB 등재"},
+
+    "brand_lookalike":        {"tier": "strong", "points": 35, "label": "유명 브랜드 유사 도메인"},
+    "new_domain":             {"tier": "strong", "points": 30, "label": "신규 등록 도메인", "max_age_days": 30},
+    "shortener_cross_domain": {"tier": "strong", "points": 20, "label": "단축 URL이 다른 도메인으로 이동"},
+    "ip_host":                {"tier": "strong", "points": 35, "label": "IP 주소로 된 URL"},
+    "brand_form_mismatch":    {"tier": "strong", "points": 40, "label": "브랜드와 도메인이 다른 입력 폼"},
+    "ai_impersonation":       {"tier": "strong", "points": 50, "label": "AI 판단: 사칭 페이지"},
+    "ai_context_mismatch":    {"tier": "strong", "points": 40, "label": "AI 판단: 안내문과 페이지 목적 불일치"},
+
+    "http":                   {"tier": "weak", "points": 8,  "label": "암호화되지 않은 연결(http)"},
+    "long_url":               {"tier": "weak", "points": 5,  "label": "비정상적으로 긴 URL", "min_length": 100},
+    "many_subdomains":        {"tier": "weak", "points": 7,  "label": "서브도메인 과다", "min_count": 4},
+    "encoded_chars":          {"tier": "weak", "points": 6,  "label": "인코딩·특수문자 과다", "min_count": 6},
+    "at_symbol":              {"tier": "weak", "points": 8,  "label": "URL에 @ 기호 포함"},
+    "many_params":            {"tier": "weak", "points": 4,  "label": "파라미터 과다", "min_count": 6},
+    "punycode":               {"tier": "weak", "points": 10, "label": "국제화 도메인(퓨니코드)"},
+    "suspicious_tld":         {"tier": "weak", "points": 6,  "label": "악용이 잦은 최상위 도메인",
+                               "tlds": ["top", "xyz", "icu", "cyou", "buzz", "click", "link", "rest", "cfd", "sbs", "lol", "monster", "quest", "bond", "zip", "mov", "tk", "ml", "ga", "cf", "gq"]},
+    "form_posts_elsewhere":   {"tier": "weak", "points": 8,  "label": "입력 정보가 다른 도메인으로 전송됨"},
+    "ai_brand_claim":         {"tier": "weak", "points": 10, "label": "AI 판단: 공식 도메인이 아닌 곳에서 브랜드 표방"},
+    "hosting_platform":       {"tier": "weak", "points": 6,  "label": "무료 호스팅·웹빌더 주소"},
+
+    "trusted_site":           {"tier": "safe", "points": 40, "label": "신뢰 사이트 목록에 포함"},
+    "old_domain":             {"tier": "safe", "points": 15, "label": "오래된 도메인", "min_age_days": 1095},
+    "valid_cert":             {"tier": "safe", "points": 5,  "label": "정상 인증서"},
+
+    "sensitive_form":         {"tier": "fact", "points": 0,  "label": "비밀번호·결제 정보 입력란"}
+  },
+  "combos": [
+    {"id": "http_sensitive_form", "when": ["http", "sensitive_form"], "tier": "strong", "points": 35,
+     "label": "암호화되지 않은 연결에서 민감 정보 입력",
+     "detail": "암호화되지 않은 연결(http)에서 비밀번호·결제 정보 등을 입력받음"},
+    {"id": "new_domain_brand", "when": ["new_domain", "brand_lookalike"], "tier": "strong", "points": 15,
+     "label": "신규 도메인 + 브랜드 유사",
+     "detail": "최근 만들어진 도메인이 유명 브랜드와 비슷함"},
+    {"id": "shortener_new_domain", "when": ["shortener_cross_domain", "new_domain"], "tier": "strong", "points": 15,
+     "label": "단축 URL + 신규 도메인",
+     "detail": "단축 URL이 최근 만들어진 도메인으로 연결됨"}
+  ]
+}

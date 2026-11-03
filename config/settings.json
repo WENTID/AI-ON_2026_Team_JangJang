@@ -1,0 +1,62 @@
+{
+  "fetch": {
+    "timeout_sec": 8,
+    "max_redirects": 10,
+    "max_html_bytes": 1000000,
+    "max_meta_refresh": 2,
+    "allow_private_hosts": false,
+    "user_agent": "Mozilla/5.0 (Linux; Android 14; SM-S918N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36"
+  },
+  "domain_lookup": {
+    "bootstrap_url": "https://data.iana.org/rdap/dns.json",
+    "rdap_url": "https://rdap.org/domain/{domain}",
+    "timeout_sec": 8
+  },
+  "safe_browsing": {
+    "timeout_sec": 6,
+    "threat_types": ["SOCIAL_ENGINEERING", "MALWARE", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"]
+  },
+  "phish_feed": {
+    "url": "https://openphish.com/feed.txt",
+    "refresh_minutes": 60
+  },
+  "ai": {
+    "enabled": true,
+    "model": "gemini-3.5-flash-lite",
+    "timeout_sec": 25,
+    "max_requests_per_minute": 10,
+    "max_text_chars": 3000,
+    "min_confidence": 0.6,
+    "skip_if_rule_score_at_least": 90
+  },
+  "screenshot": {
+    "enabled": false
+  },
+  "download_extensions": [".apk", ".xapk", ".exe", ".msi", ".dmg", ".pkg", ".scr", ".bat", ".cmd", ".jar", ".ipa", ".vbs", ".ps1"],
+  "download_content_types": [
+    "application/vnd.android.package-archive",
+    "application/x-msdownload",
+    "application/x-msdos-program",
+    "application/x-msi",
+    "application/x-apple-diskimage",
+    "application/java-archive",
+    "application/octet-stream"
+  ],
+  "shorteners": [
+    "bit.ly", "abit.ly", "han.gl", "me2.do", "naver.me", "vo.la", "url.kr", "t.ly", "tinyurl.com", "goo.gl",
+    "ow.ly", "is.gd", "buly.kr", "c11.kr", "t.co", "rebrand.ly", "cutt.ly", "shorturl.at", "rb.gy", "bit.do",
+    "lrl.kr", "zrr.kr", "link24.kr", "s.id", "qrco.de", "l.ead.me", "me-qr.com", "tny.im", "v.gd", "shorturl.asia"
+  ],
+  "hosting_platforms": [
+    "github.io", "web.app", "firebaseapp.com", "pages.dev", "workers.dev", "vercel.app", "netlify.app",
+    "herokuapp.com", "glitch.me", "weebly.com", "weeblysite.com", "wixsite.com", "wixstudio.com", "blogspot.com",
+    "sites.google.com", "docs.google.com", "forms.gle", "storage.googleapis.com", "firebasestorage.googleapis.com",
+    "r2.dev", "ipfs.io", "dweb.link", "s3.amazonaws.com", "azurewebsites.net", "web.core.windows.net",
+    "000webhostapp.com", "square.site", "notion.site", "webflow.io", "framer.app", "framer.website",
+    "godaddysites.com", "mystrikingly.com", "jimdosite.com", "yolasite.com", "ngrok-free.app", "ngrok.io",
+    "trycloudflare.com", "translate.goog", "page.link", "replit.app", "repl.co", "surge.sh", "onrender.com",
+    "fly.dev", "glide.page", "carrd.co", "tilda.ws", "wordpress.com", "blogger.com", "linktr.ee",
+    "amazonaws.com", "cloudfront.net", "appspot.com", "googleapis.com", "googleusercontent.com", "azureedge.net",
+    "cloudflare-ipfs.com", "digitaloceanspaces.com", "backblazeb2.com", "dropboxusercontent.com", "wcomhost.com", "edgeone.dev", "edgeone.app", "cprapid.com", "homedns.org"
+  ]
+}

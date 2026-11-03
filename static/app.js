@@ -2,30 +2,24 @@
 const $ = (id) => document.getElementById(id);
 const views = ["input-view", "loading-view", "result-view"];
 const show = (id) => views.forEach((v) => ($(v).hidden = v !== id));
+const setMsg = (text) => ($("input-msg").textContent = text || "");
 
-const VERDICT_DESC = {
-  safe: "피싱 위험 신호가 거의 없습니다.",
-  caution: "피싱 가능성이 있습니다. 개인정보·금융정보를 입력하지 마세요.",
-  danger: "피싱 사이트일 가능성이 높습니다. 접속하지 마세요.",
+const ICONS = {
+  safe: '<svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 3 8.4 7 9.5 4-1.1 7-4.9 7-9.5V6l-7-3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m8.5 12 2.5 2.5 4.5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  caution: '<svg viewBox="0 0 24 24"><path d="M12 4 2.8 19.5h18.4L12 4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v4.5M12 17.2v.1" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  danger: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="m9 9 6 6m0-6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
 };
 
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-// ---------- 탭 ----------
-document.querySelectorAll(".tab").forEach((tab) =>
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t === tab));
-    ["camera", "upload", "url"].forEach((name) => ($(`panel-${name}`).hidden = name !== tab.dataset.tab));
-    if (tab.dataset.tab !== "camera") stopCamera();
-  })
-);
-
 // ---------- 분석 요청 ----------
 async function analyze(url, imageId = null) {
   stopCamera();
+  setMsg("");
   show("loading-view");
+  document.querySelector("main").scrollIntoView({ behavior: "smooth" });
   try {
     const res = await fetch("/api/analyze", {
       method: "POST",
@@ -36,12 +30,9 @@ async function analyze(url, imageId = null) {
     if (!res.ok) throw new Error(data.detail || "분석에 실패했습니다.");
     renderResult(data);
     show("result-view");
-    window.scrollTo(0, 0);
   } catch (e) {
     show("input-view");
-    $("url-msg").textContent = e.message;
-    $("upload-msg").textContent = e.message;
-    $("camera-msg").textContent = e.message;
+    setMsg(e.message);
   }
 }
 
@@ -59,8 +50,7 @@ async function uploadImage(blob, decode) {
 $("url-form").addEventListener("submit", (e) => {
   e.preventDefault();
   const url = $("url-input").value.trim();
-  if (!url) return ($("url-msg").textContent = "URL을 입력하세요.");
-  $("url-msg").textContent = "";
+  if (!url) return setMsg("검사할 링크를 입력하세요.");
   analyze(url);
 });
 
@@ -72,13 +62,13 @@ drop.addEventListener("drop", (e) => e.dataTransfer.files[0] && handleFile(e.dat
 $("file").addEventListener("change", (e) => e.target.files[0] && handleFile(e.target.files[0]));
 
 async function handleFile(file) {
-  $("upload-msg").textContent = "";
+  setMsg("");
   $("code-choices").hidden = true;
-  if (!file.type.startsWith("image/")) return ($("upload-msg").textContent = "이미지 파일만 올릴 수 있습니다.");
+  if (!file.type.startsWith("image/")) return setMsg("이미지 파일만 올릴 수 있습니다.");
   try {
     const { image_id, codes } = await uploadImage(file, true);
     if (codes.length === 0) {
-      $("upload-msg").textContent = "이미지에서 QR코드를 찾지 못했습니다. QR이 선명하게 보이는 사진을 올려 주세요.";
+      setMsg("이미지에서 QR코드를 찾지 못했습니다. QR이 선명하게 보이는 사진을 올려 주세요.");
     } else if (codes.length === 1) {
       pickCode(codes[0], image_id);
     } else {
@@ -95,17 +85,15 @@ async function handleFile(file) {
       $("code-choices").hidden = false;
     }
   } catch (e) {
-    $("upload-msg").textContent = e.message;
+    setMsg(e.message);
   } finally {
     $("file").value = "";
   }
 }
 
 function pickCode(code, imageId) {
-  if (!code.is_url) {
-    $("upload-msg").textContent = `QR 내용이 웹 주소가 아닙니다: ${code.text}`;
-    return;
-  }
+  if (!code.is_url) return setMsg(`QR 내용이 웹 주소가 아닙니다: ${code.text}`);
+  $("code-choices").hidden = true;
   analyze(code.text, imageId);
 }
 
@@ -114,23 +102,29 @@ let stream = null;
 let scanning = false;
 
 $("camera-start").addEventListener("click", startCamera);
+$("camera-stop").addEventListener("click", stopCamera);
+
+function setCameraUI(on) {
+  $("camera-idle").hidden = on;
+  $("camera-hint").hidden = !on;
+  $("camera-stop").hidden = !on;
+  $("video").hidden = !on;
+}
 
 async function startCamera() {
-  $("camera-msg").textContent = "";
+  setMsg("");
   if (!navigator.mediaDevices?.getUserMedia) {
-    $("camera-msg").textContent = "이 브라우저에서는 카메라를 쓸 수 없습니다. (https 또는 localhost 에서만 동작)";
-    return;
+    return setMsg("이 브라우저에서는 카메라를 쓸 수 없습니다. (https 또는 localhost 주소에서만 동작)");
   }
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 } } });
   } catch (e) {
-    $("camera-msg").textContent = "카메라 권한이 없거나 카메라를 찾을 수 없습니다.";
-    return;
+    return setMsg("카메라 권한이 없거나 카메라를 찾을 수 없습니다.");
   }
   const video = $("video");
   video.srcObject = stream;
   await video.play();
-  $("camera-start").hidden = true;
+  setCameraUI(true);
   scanning = true;
   requestAnimationFrame(scanLoop);
 }
@@ -139,7 +133,7 @@ function stopCamera() {
   scanning = false;
   if (stream) stream.getTracks().forEach((t) => t.stop());
   stream = null;
-  $("camera-start").hidden = false;
+  setCameraUI(false);
 }
 
 function scanLoop() {
@@ -164,7 +158,7 @@ function scanLoop() {
 async function onCameraCode(text, canvas) {
   scanning = false;
   if (!/^https?:\/\//i.test(text.trim())) {
-    $("camera-msg").textContent = `QR 내용이 웹 주소가 아닙니다: ${text}`;
+    setMsg(`QR 내용이 웹 주소가 아닙니다: ${text}`);
     scanning = true;
     setTimeout(() => requestAnimationFrame(scanLoop), 1500);
     return;
@@ -191,19 +185,22 @@ function reasonItem(r) {
 }
 
 function renderResult(d) {
-  const v = $("verdict");
-  v.className = `verdict ${d.verdict}`;
+  // 맨 위: 종합 판정. 피싱 판정과 기타 위협은 문구·태그로 구분해 보여 준다.
+  $("verdict").className = `verdict ${d.verdict}`;
+  $("verdict-icon").innerHTML = ICONS[d.verdict];
+  $("verdict-kind").textContent = d.headline.kind;
   $("verdict-label").textContent = d.verdict_label;
-  $("verdict-desc").textContent = VERDICT_DESC[d.verdict];
+  $("verdict-desc").textContent = d.headline.message;
+  $("tag-phishing").textContent = `피싱 판정: ${d.phishing_verdict_label}`;
   const n = d.notices.length;
-  $("notice-badge").hidden = n === 0;
-  $("notice-badge").textContent = `주의사항 ${n}건`;
+  $("tag-notice").hidden = n === 0;
+  $("tag-notice").textContent = `기타 위협·주의사항 ${n}건`;
 
   $("r-input").textContent = d.input_url;
   $("r-final").textContent = d.final_url;
   $("r-final-row").hidden = d.final_url === d.input_url;
 
-  // 판정 근거: 핵심 3개는 바로, 나머지는 펼쳐보기
+  // 피싱 판정 근거: 핵심 3개는 바로, 나머지는 펼쳐보기
   const risks = d.risk_reasons;
   $("risk-top").innerHTML = risks.slice(0, 3).map(reasonItem).join("");
   $("risk-more").innerHTML = risks.slice(3).map(reasonItem).join("");
@@ -212,9 +209,11 @@ function renderResult(d) {
   $("safe-title").hidden = d.safe_reasons.length === 0;
   $("safe-list").innerHTML = d.safe_reasons.map((r) => `<li>${sourceTag(r.source)}${esc(r.detail)}</li>`).join("");
 
-  // 기타 주의사항: 없으면 섹션 숨김
+  // 기타 위협·주의사항: 없으면 섹션 숨김
   $("notice-card").hidden = n === 0;
-  $("notice-list").innerHTML = d.notices.map((x) => `<li>${esc(x.detail)}</li>`).join("");
+  $("notice-list").innerHTML = d.notices
+    .map((x) => `<li class="${x.escalate ? "severe" : ""}">${x.escalate ? sourceTag("DB") : ""}${esc(x.detail)}</li>`)
+    .join("");
 
   // AI 분석
   const ai = d.ai;
@@ -260,6 +259,8 @@ function renderResult(d) {
 
 $("again").addEventListener("click", () => {
   show("input-view");
-  ["url-msg", "upload-msg", "camera-msg"].forEach((id) => ($(id).textContent = ""));
+  setMsg("");
   $("url-input").value = "";
 });
+
+setCameraUI(false);

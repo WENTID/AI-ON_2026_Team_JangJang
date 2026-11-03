@@ -79,6 +79,27 @@ def ai_signal(result: dict, final_host: str) -> tuple[dict | None, str]:
                        source="AI 판단"), "공식 도메인 아님"
 
 
+def headline(phishing_verdict: str, malware: bool, notice_count: int) -> dict:
+    """결과 화면 맨 위 문구. 피싱 판정과 기타 위협(악성코드 등)을 섞지 않는다."""
+    if malware and phishing_verdict == "danger":
+        return {"kind": "피싱 + 악성코드 위험",
+                "message": "피싱 사이트일 가능성이 높고, 악성·원치 않는 소프트웨어 배포 사이트로도 등록되어 있습니다. 접속하지 마세요."}
+    if malware:
+        return {"kind": "악성코드 위험",
+                "message": "피싱 신호는 뚜렷하지 않지만, 악성·원치 않는 소프트웨어를 퍼뜨리는 사이트로 등록되어 있습니다. "
+                           "접속하거나 파일을 받지 마세요."}
+    if phishing_verdict == "danger":
+        return {"kind": "피싱 위험",
+                "message": "피싱 사이트일 가능성이 높습니다. 아이디·비밀번호·금융정보를 입력하지 마세요."}
+    if phishing_verdict == "caution":
+        return {"kind": "피싱 주의",
+                "message": "피싱으로 단정할 수는 없지만 의심 신호가 있습니다. 개인정보를 입력하기 전에 주소를 다시 확인하세요."}
+    message = "피싱 의심 신호가 발견되지 않았습니다."
+    if notice_count:
+        message += f" 다만 피싱과 별개로 확인이 필요한 점이 {notice_count}건 있습니다."
+    return {"kind": "피싱 안전", "message": message}
+
+
 def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whitelist: bool = True,
             ai_wait: bool = False, context_image_id: str | None = None) -> dict:
     settings = config.settings()
@@ -206,13 +227,12 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
         signals.append(context["signal"])
 
     # ---- 최종 판정 ----
+    # 피싱 판정과 기타 위협은 따로 계산하고 따로 표시한다.
+    # 악성코드 DB 등재만 종합 판정을 '위험'으로 올리되, 화면 문구는 '피싱'이 아니라 '악성코드'로 안내한다.
     final = score(signals)
-    risk_reasons = final["risk_reasons"]
-    verdict = final["verdict"]
-    if any(n.get("escalate") for n in notices):
-        verdict = "danger"  # 악성코드 DB 등재는 확정 신호로 보고 판정을 '위험'으로 올린다.
-        risk_reasons = [{"id": "malware_db", "tier": "confirmed", "points": 0, "label": "악성코드 DB 등재",
-                         "detail": "악성·원치 않는 소프트웨어 배포 사이트로 등록됨", "source": "DB"}] + risk_reasons
+    phishing_verdict = final["verdict"]
+    malware = any(n.get("escalate") for n in notices)
+    verdict = "danger" if malware else phishing_verdict
 
     return {
         "input_url": input_url,
@@ -220,9 +240,12 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
         "redirects": trace["chain"],
         "verdict": verdict,
         "verdict_label": VERDICT_LABEL[verdict],
+        "phishing_verdict": phishing_verdict,
+        "phishing_verdict_label": VERDICT_LABEL[phishing_verdict],
+        "headline": headline(phishing_verdict, malware, len(notices)),
         "score": final["score"],
         "breakdown": final["breakdown"],
-        "risk_reasons": [r for r in risk_reasons if r["tier"] != "fact"],
+        "risk_reasons": [r for r in final["risk_reasons"] if r["tier"] != "fact"],
         "safe_reasons": final["safe_reasons"],
         "notices": notices,
         "ai": ai,

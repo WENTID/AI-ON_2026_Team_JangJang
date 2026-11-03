@@ -13,7 +13,7 @@
     "shortener_cross_domain": {"tier": "strong", "points": 20, "label": "단축 URL이 다른 도메인으로 이동"},
     "ip_host":                {"tier": "strong", "points": 35, "label": "IP 주소로 된 URL"},
     "brand_form_mismatch":    {"tier": "strong", "points": 40, "label": "브랜드와 도메인이 다른 입력 폼"},
-    "ai_impersonation":       {"tier": "strong", "points": 50, "label": "AI 판단: 사칭 페이지"},
+    "ai_impersonation":       {"tier": "strong", "points": 60, "label": "AI 판단: 사칭 페이지"},
     "ai_context_mismatch":    {"tier": "strong", "points": 40, "label": "AI 판단: 안내문과 페이지 목적 불일치"},
 
     "http":                   {"tier": "weak", "points": 8,  "label": "암호화되지 않은 연결(http)"},

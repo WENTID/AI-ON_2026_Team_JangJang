@@ -102,7 +102,13 @@ def test_analyze_download_notice_does_not_change_verdict():
 def test_malware_db_escalates_to_danger():
     snap = fake_snapshot("https://example.org/", "<title>hi</title>", created="2010-01-01T00:00:00Z")
     snap["safe_browsing"]["matches"] = [{"url": "https://example.org/", "threat_type": "MALWARE"}]
-    assert analyze(snap, use_ai=False)["verdict"] == "danger"
+    r = analyze(snap, use_ai=False)
+    assert r["verdict"] == "danger"
+    # 피싱 판정과 문구는 악성코드와 섞이지 않아야 한다.
+    assert r["phishing_verdict"] == "safe"
+    assert r["headline"]["kind"] == "악성코드 위험"
+    assert "피싱 사이트일 가능성" not in r["headline"]["message"]
+    assert all(x["id"] != "malware_db" for x in r["risk_reasons"])
 
 
 # ---------- AI 결과 반영 ----------

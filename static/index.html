@@ -4,113 +4,189 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>QR 피싱 분석기</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
   <!-- jsQR: 카메라 영상에서 QR을 실시간으로 읽는 라이브러리 -->
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 </head>
 <body>
-<main>
-  <header>
-    <h1>QR 피싱 분석기</h1>
-    <p class="sub">QR코드 속 링크가 피싱 사이트인지 확인합니다</p>
+<div class="hero-bg">
+  <nav class="topbar">
+    <a class="brand" href="/">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 2 4 7v8c0 7.5 5.1 13.6 12 15 6.9-1.4 12-7.5 12-15V7L16 2Z" fill="currentColor"/>
+        <rect x="10" y="10" width="5" height="5" rx="1" fill="#0d1530"/><rect x="17" y="10" width="5" height="5" rx="1" fill="#0d1530"/>
+        <rect x="10" y="17" width="5" height="5" rx="1" fill="#0d1530"/><rect x="18.5" y="18.5" width="2" height="2" fill="#0d1530"/>
+      </svg>
+      <span>QR 피싱 분석기</span>
+    </a>
+    <div class="nav-links">
+      <a href="#how">검사 방법</a><a href="#tips">예방 수칙</a><a href="#faq">자주 묻는 질문</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <p class="eyebrow">큐싱(QR 피싱) 검사</p>
+    <h1>찍기 전에,<br><span class="hl">이 QR</span> 먼저 검사하세요</h1>
+    <p class="lead">QR코드 속 링크를 끝까지 따라가 보고, 은행·택배·공공기관을 사칭한 피싱 페이지인지 규칙과 AI로 판정합니다.</p>
+    <ul class="chips">
+      <li>AI 사칭 판별</li><li>피싱 DB 조회</li><li>리다이렉트 추적</li><li>가입·설치 없음</li>
+    </ul>
   </header>
+</div>
 
-  <!-- 입력 화면 -->
-  <section id="input-view">
-    <div class="tabs" role="tablist">
-      <button class="tab active" data-tab="camera" role="tab">카메라</button>
-      <button class="tab" data-tab="upload" role="tab">이미지</button>
-      <button class="tab" data-tab="url" role="tab">URL 입력</button>
-    </div>
-
-    <div class="panel" id="panel-camera">
-      <div class="camera-box">
-        <video id="video" playsinline muted></video>
-        <canvas id="frame" hidden></canvas>
-        <div class="camera-hint">QR과 주변 안내문이 함께 보이도록 비춰 주세요</div>
-        <button id="camera-start" class="primary">카메라 켜기</button>
-      </div>
-      <p class="muted small" id="camera-msg"></p>
-    </div>
-
-    <div class="panel" id="panel-upload" hidden>
+<main>
+  <!-- 입력 카드 -->
+  <section class="panel" id="input-view">
+    <div class="input-grid">
       <label id="drop" class="drop">
         <input type="file" id="file" accept="image/*" hidden>
-        <strong>QR 이미지를 끌어다 놓거나 눌러서 선택</strong>
-        <span class="muted small">QR 주변 안내문이 함께 찍힌 사진이면 더 좋습니다</span>
+        <span class="drop-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3M12 4v11m0-11-4 4m4-4 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <strong>QR 사진을 끌어다 놓거나 눌러서 선택</strong>
+        <span class="muted small">QR 주변 안내문까지 함께 찍힌 사진이면 더 좋아요</span>
+        <span class="btn dark">파일 선택</span>
       </label>
-      <div id="code-choices" hidden>
-        <p>이미지에서 QR코드 여러 개를 찾았습니다. 분석할 것을 선택하세요.</p>
-        <ul id="code-list"></ul>
+
+      <div class="camera" id="camera">
+        <video id="video" playsinline muted></video>
+        <canvas id="frame" hidden></canvas>
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div class="camera-idle" id="camera-idle">
+          <button id="camera-start" class="cam-btn" aria-label="카메라 켜기">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M8 12h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <strong>카메라로 스캔</strong>
+          <span class="small">QR과 주변 안내문이 함께 보이게 비춰 주세요</span>
+        </div>
+        <div class="camera-hint" id="camera-hint" hidden>QR과 주변 안내문이 함께 보이도록 비춰 주세요</div>
+        <button class="cam-stop" id="camera-stop" hidden>닫기</button>
       </div>
-      <p class="error" id="upload-msg"></p>
     </div>
 
-    <div class="panel" id="panel-url" hidden>
-      <form id="url-form" class="url-form">
-        <input id="url-input" type="text" inputmode="url" placeholder="https://example.com" autocomplete="off">
-        <button class="primary" type="submit">분석</button>
-      </form>
-      <p class="error" id="url-msg"></p>
+    <div id="code-choices" class="choices" hidden>
+      <p><strong>QR코드를 여러 개 찾았어요.</strong> 검사할 것을 선택하세요.</p>
+      <ul id="code-list"></ul>
     </div>
+
+    <form id="url-form" class="url-form">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input id="url-input" type="text" inputmode="url" placeholder="또는 QR에 담긴 링크를 붙여 넣으세요" autocomplete="off">
+      <button class="btn primary" type="submit">검사</button>
+    </form>
+    <p class="error" id="input-msg" role="alert"></p>
   </section>
 
   <!-- 로딩 -->
-  <section id="loading-view" hidden>
+  <section class="panel center" id="loading-view" hidden>
     <div class="spinner"></div>
-    <p class="muted">분석 중입니다…</p>
+    <p class="muted">링크를 따라가며 분석하고 있어요…</p>
   </section>
 
-  <!-- 결과 화면 -->
-  <section id="result-view" hidden>
+  <!-- 결과 -->
+  <section class="panel" id="result-view" hidden>
     <div id="verdict" class="verdict">
-      <div class="verdict-label" id="verdict-label"></div>
-      <div class="verdict-desc" id="verdict-desc"></div>
-      <span class="badge" id="notice-badge" hidden></span>
+      <div class="verdict-icon" id="verdict-icon"></div>
+      <div class="verdict-text">
+        <p class="verdict-kind" id="verdict-kind"></p>
+        <p class="verdict-label" id="verdict-label"></p>
+        <p class="verdict-desc" id="verdict-desc"></p>
+        <div class="verdict-tags">
+          <span class="tag" id="tag-phishing"></span>
+          <span class="tag" id="tag-notice" hidden></span>
+        </div>
+      </div>
     </div>
 
-    <div class="card urls">
-      <div><span class="k">분석한 주소</span><span class="v mono" id="r-input"></span></div>
+    <div class="block urls">
+      <div><span class="k">검사한 주소</span><span class="v mono" id="r-input"></span></div>
       <div id="r-final-row"><span class="k">최종 도착 주소</span><span class="v mono" id="r-final"></span></div>
     </div>
 
-    <div class="card" id="risk-card">
-      <h2>판정 근거</h2>
+    <div class="block">
+      <h2>피싱 판정 근거</h2>
       <ul class="reasons" id="risk-top"></ul>
       <details id="risk-more-wrap" hidden><summary>근거 더 보기</summary><ul class="reasons" id="risk-more"></ul></details>
-      <p class="muted small" id="risk-empty" hidden>위험 신호가 발견되지 않았습니다.</p>
+      <p class="muted small" id="risk-empty" hidden>피싱 의심 신호가 발견되지 않았습니다.</p>
       <h3 id="safe-title" hidden>안전 근거</h3>
       <ul class="reasons safe" id="safe-list"></ul>
     </div>
 
-    <div class="card" id="notice-card" hidden>
-      <h2>기타 주의사항</h2>
-      <p class="muted small">피싱은 아니지만 확인이 필요한 점</p>
+    <div class="block" id="notice-card" hidden>
+      <h2>기타 위협·주의사항</h2>
+      <p class="muted small">피싱 판정과 별개로 확인이 필요한 점</p>
       <ul class="reasons notice" id="notice-list"></ul>
     </div>
 
-    <div class="card">
+    <div class="block">
       <h2>AI 페이지 분석</h2>
       <div id="ai-body"></div>
     </div>
 
-    <div class="card">
-      <h2>안내문 맥락 비교</h2>
+    <div class="block">
+      <h2>안내문 맥락 비교 <span class="pill">2단계</span></h2>
       <div class="compare">
-        <div><span class="k">QR 안내문 목적</span><span class="v" id="ctx-notice"></span></div>
-        <div><span class="k">실제 페이지 목적</span><span class="v" id="ctx-page"></span></div>
+        <div class="cmp"><span class="k">QR 안내문 목적</span><strong id="ctx-notice"></strong></div>
+        <div class="vs">vs</div>
+        <div class="cmp"><span class="k">실제 페이지 목적</span><strong id="ctx-page"></strong></div>
       </div>
       <p class="muted small" id="ctx-msg"></p>
     </div>
 
-    <details class="card details">
+    <details class="block details">
       <summary>상세 정보</summary>
       <div id="detail-body"></div>
     </details>
 
-    <button id="again" class="primary wide">다른 QR 검사하기</button>
+    <button id="again" class="btn primary wide">다른 QR 검사하기</button>
+  </section>
+
+  <!-- 검사 방법 -->
+  <section class="section" id="how">
+    <h2 class="section-title">이렇게 검사해요</h2>
+    <ol class="steps">
+      <li><span class="num">1</span><strong>QR 읽기</strong><p>카메라·사진·링크 중 편한 방법으로 넣으면 QR 속 주소를 꺼냅니다.</p></li>
+      <li><span class="num">2</span><strong>링크 끝까지 추적</strong><p>서버가 대신 접속해 리다이렉트를 따라가고, 도메인 나이·인증서·피싱 DB를 조회합니다.</p></li>
+      <li><span class="num">3</span><strong>규칙 + AI 판정</strong><p>AI가 페이지가 어떤 서비스를 내세우는지 읽고, 실제 도메인과 비교해 사칭 여부를 가립니다.</p></li>
+    </ol>
+  </section>
+
+  <!-- 예방 수칙 -->
+  <section class="section" id="tips">
+    <div class="tips">
+      <div>
+        <h2 class="section-title">큐싱 예방 수칙</h2>
+        <p class="muted">QR 피싱은 정상 안내문 위에 가짜 QR 스티커를 덧붙이는 경우가 많아요.</p>
+      </div>
+      <ul>
+        <li>주차장·전단지·포스터의 QR은 <strong>스티커가 덧붙여져 있지 않은지</strong> 먼저 보세요.</li>
+        <li>QR로 열린 페이지에서 <strong>로그인·카드번호·인증번호</strong>를 요구하면 의심하세요.</li>
+        <li>은행·택배·공공기관은 <strong>공식 앱이나 직접 입력한 주소</strong>로 확인하세요.</li>
+        <li>QR로 <strong>앱 설치 파일(.apk)</strong>을 받으라고 하면 설치하지 마세요.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 자주 묻는 질문 -->
+  <section class="section" id="faq">
+    <h2 class="section-title">자주 묻는 질문</h2>
+    <details class="faq"><summary>큐싱이 무엇인가요?</summary>
+      <p>QR코드와 피싱을 합친 말로, QR을 찍으면 가짜 은행·택배·공공기관 페이지로 연결해 개인정보나 금융정보를 빼내는 수법입니다.</p></details>
+    <details class="faq"><summary>무엇을 검사하나요?</summary>
+      <p>피싱 DB 등재 여부, 유명 브랜드와 비슷한 도메인, 최근 만들어진 도메인, 단축 URL의 실제 도착지, 로그인·결제 입력란, 그리고 AI가 판단한 페이지의 사칭 여부를 종합합니다. 악성코드 배포, 앱 설치 파일, 암호화되지 않은 연결은 피싱과 별도로 알려 드립니다.</p></details>
+    <details class="faq"><summary>"안전"이 나오면 무조건 안전한가요?</summary>
+      <p>아닙니다. 피싱 의심 신호가 발견되지 않았다는 뜻입니다. 새로 만들어진 피싱 사이트는 탐지되지 않을 수 있으니, 개인정보 입력은 항상 신중하게 하세요.</p></details>
+    <details class="faq"><summary>올린 사진은 어디에 쓰이나요?</summary>
+      <p>QR 주변 안내문과 실제 페이지의 목적이 맞는지 비교하는 맥락 분석(2단계 기능)에 쓰기 위해 서버에 저장됩니다.</p></details>
+    <details class="faq"><summary>검사하면 그 사이트에 접속되나요?</summary>
+      <p>사용자 기기가 아니라 분석 서버가 대신 접속합니다. 서버는 페이지를 읽기만 하고, 입력란 제출·파일 다운로드는 하지 않습니다.</p></details>
   </section>
 </main>
+
+<footer class="footer">QR 피싱 분석기 · 팀 장장 · AI:ON 2026 교내 AI 경진대회 출품작</footer>
 <script src="/static/app.js"></script>
 </body>
 </html>

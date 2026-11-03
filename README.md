@@ -65,7 +65,8 @@ copy .env.example .env      # 그다음 .env 파일을 열어 API 키 두 개를
 
 - **피싱 판정과 기타 위협은 따로 표시합니다.** 기타 위협·주의사항(악성코드 DB, 실행 파일 다운로드, http, 인증서 오류)은 피싱 판정을 바꾸지 않습니다. 단, 악성코드 DB 등재는 종합 판정을 위험으로 올리되 "악성코드 위험"으로 안내하고 피싱 판정은 따로 보여 줍니다.
 - **AI 사칭 판별**: 서버가 페이지 HTML에서 제목·본문·입력란·이미지·링크 도메인을 뽑아 Gemini에 보내고, AI는 "어떤 서비스를 표방하는지 / 페이지 목적 / 요구 정보 / 공식 도메인 추정"만 답합니다. 실제 도메인과의 비교와 점수 반영은 규칙이 합니다. 피싱 DB 등재나 신뢰 사이트처럼 규칙으로 판정이 분명하면 AI를 호출하지 않습니다.
-- 배점·임계값·조합 규칙: `config/scoring.json` / 접속 제한·AI 모델·단축 URL·호스팅 목록: `config/settings.json` / 브랜드 목록: `config/brands.json` / 신뢰 목록 추가: `config/whitelist_custom.txt`
+- 배점·임계값·조합 규칙: `config/scoring.json` / 접속 제한·AI 모델·단축 URL·호스팅 목록: `config/settings.json` / 신뢰 목록 추가: `config/whitelist_custom.txt`
+- 브랜드 목록: 팀 조사 목록 `config/brands_team.csv`(101개)를 고친 뒤 `python scripts/import_brands.py` 를 실행하면 `config/brands.json` 이 다시 만들어집니다. (`brands.json` 은 직접 고치지 않기)
 
 ## 6. 안전 규칙 (분석 대상 접속)
 

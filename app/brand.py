@@ -59,10 +59,18 @@ def find_lookalike(host: str) -> dict | None:
     return None
 
 
+# 페이지 제목에서 브랜드를 찾을 때 쓰지 않는 이름: 일반 영어 단어라 브랜드가 아닌 뜻으로 자주 나온다.
+_GENERIC_ALIASES = {"line", "steam", "chase", "visa", "x", "booking", "live", "office"}
+
+
 def _alias_pattern(alias: str) -> re.Pattern:
+    alias = alias.lower()
     if alias.isascii():
-        return re.compile(r"(?<![a-z0-9])" + re.escape(alias.lower()) + r"(?![a-z0-9])")
-    return re.compile(re.escape(alias.lower()))
+        return re.compile(r"(?<![a-z0-9])" + re.escape(alias) + r"(?![a-z0-9])")
+    if len(alias) <= 2:
+        # '토스', '신협' 같은 짧은 한글 이름은 앞뒤가 다른 한글로 이어지면 다른 단어로 본다. ('토스트' 제외)
+        return re.compile(r"(?<![가-힣])" + re.escape(alias) + r"(?![가-힣])")
+    return re.compile(re.escape(alias))
 
 
 def brands_in_text(text: str) -> list[dict]:
@@ -70,20 +78,29 @@ def brands_in_text(text: str) -> list[dict]:
     text = (text or "").lower()
     found = []
     for brand in config.brands():
-        names = [brand["name"], *brand.get("aliases", [])]
-        positions = [m.start() for n in names if len(n) >= 2 for m in [_alias_pattern(n).search(text)] if m]
+        names = [n for n in [brand["name"], *brand.get("aliases", [])] if len(n) >= 2 and n.lower() not in _GENERIC_ALIASES]
+        positions = [m.start() for n in names for m in [_alias_pattern(n).search(text)] if m]
         if positions:
             found.append((min(positions), brand))
     return [b for _, b in sorted(found, key=lambda x: x[0])]
 
 
+def _norm_name(s: str) -> str:
+    return re.sub(r"[\s\-_.·()/&,]+", "", s.lower())
+
+
 def find_brand(name: str | None) -> dict | None:
-    """AI가 말한 서비스 이름을 브랜드 목록에서 찾는다."""
+    """AI가 말한 서비스 이름을 브랜드 목록에서 찾는다.
+    이름이 정확히 같거나(공백·기호 무시), 4글자 이상 별칭이 단어 단위로 들어 있을 때만 같은 브랜드로 본다.
+    ('Groups Inc' 를 UPS로 보는 식의 오인 방지)"""
     if not name:
         return None
-    name = name.strip().lower()
+    target = _norm_name(name)
+    for brand in config.brands():
+        if any(_norm_name(n) == target for n in [brand["name"], *brand.get("aliases", [])]):
+            return brand
     for brand in config.brands():
         for n in [brand["name"], *brand.get("aliases", [])]:
-            if n.lower() == name or (len(n) >= 3 and (n.lower() in name or name in n.lower())):
+            if len(n) >= 4 and n.lower() not in _GENERIC_ALIASES and _alias_pattern(n).search(name.lower()):
                 return brand
     return None

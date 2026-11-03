@@ -87,20 +87,31 @@ class _RateLimiter:
 
 
 _limiter = _RateLimiter()
-_client = None
+_clients: dict[bool, object] = {}
 
 
-def _get_client():
-    global _client
-    if _client is None:
+def _get_client(long_timeout: bool = False):
+    """실시간용은 짧은 시간 제한, 검증용(long_timeout)은 긴 시간 제한. SDK 자체 재시도는 끈다."""
+    if long_timeout not in _clients:
         from google import genai
         from google.genai import types
         cfg = config.settings()["ai"]
-        # 재시도는 하지 않는다. (응답이 늦으면 'AI 분석 불가'로 두고 규칙 결과만으로 판정)
-        _client = genai.Client(api_key=config.env("GEMINI_API_KEY"),
-                               http_options=types.HttpOptions(timeout=cfg["timeout_sec"] * 1000,
-                                                              retry_options=types.HttpRetryOptions(attempts=1)))
-    return _client
+        seconds = cfg["eval_timeout_sec"] if long_timeout else cfg["timeout_sec"]
+        _clients[long_timeout] = genai.Client(
+            api_key=config.env("GEMINI_API_KEY"),
+            http_options=types.HttpOptions(timeout=seconds * 1000, retry_options=types.HttpRetryOptions(attempts=1)))
+    return _clients[long_timeout]
+
+
+def _is_temporary(e: Exception) -> bool:
+    """서버 과부하(5xx), 요청 한도(429), 시간 초과처럼 잠시 뒤 다시 하면 될 수 있는 오류인지."""
+    from google.genai import errors
+    import httpx
+    if isinstance(e, errors.ServerError):
+        return True
+    if isinstance(e, errors.ClientError) and getattr(e, "code", None) == 429:
+        return True
+    return isinstance(e, (httpx.TimeoutException, TimeoutError))
 
 
 def judge_page(page: dict, actual_domain: str, *, wait: bool = False) -> dict:
@@ -120,20 +131,28 @@ def judge_page(page: dict, actual_domain: str, *, wait: bool = False) -> dict:
         return {"status": "error", "model": model, "error": "AI 요청 한도 초과(잠시 후 다시 시도)"}
 
     from google.genai import types
-    try:
-        resp = _get_client().models.generate_content(
-            model=model,
-            contents="다음 웹 페이지 정보를 분석해 줘.\n" + json.dumps(payload, ensure_ascii=False),
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
-                response_mime_type="application/json",
-                response_schema=PageJudgement,
-                temperature=0,
-            ),
-        )
-        result = PageJudgement.model_validate_json(resp.text).model_dump()
-    except Exception as e:  # noqa: BLE001 - 시간 초과·한도·형식 오류 모두 'AI 분석 불가'
-        return {"status": "error", "model": model, "error": f"AI 분석 불가 ({type(e).__name__})"}
+    # 실시간 분석(wait=False)은 한 번만 시도한다. 검증(wait=True)은 서버 과부하·시간 초과면 기다렸다 다시 시도한다.
+    delays = cfg["eval_retry_delays_sec"] if wait else []
+    for attempt in range(len(delays) + 1):
+        try:
+            resp = _get_client(long_timeout=wait).models.generate_content(
+                model=model,
+                contents="다음 웹 페이지 정보를 분석해 줘.\n" + json.dumps(payload, ensure_ascii=False),
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_PROMPT,
+                    response_mime_type="application/json",
+                    response_schema=PageJudgement,
+                    temperature=0,
+                ),
+            )
+            result = PageJudgement.model_validate_json(resp.text).model_dump()
+            break
+        except Exception as e:  # noqa: BLE001 - 시간 초과·한도·형식 오류 모두 'AI 분석 불가'
+            if attempt < len(delays) and _is_temporary(e):
+                time.sleep(delays[attempt])
+                _limiter.acquire(cfg["max_requests_per_minute"], wait=True)
+                continue
+            return {"status": "error", "model": model, "error": f"AI 분석 불가 ({type(e).__name__})"}
 
     cache.parent.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")

@@ -1,39 +1,1604 @@
 {
-  "_설명": "임시 샘플 목록. 팀에서 준비한 목록으로 교체 가능. keywords: 유사 도메인 탐지에 쓰는 단어(도메인 이름 부분). 너무 흔한 단어(office, live 등)는 넣지 않는다.",
-  "brands": [
-    {"name": "국민은행", "aliases": ["KB국민은행", "KB스타뱅킹", "Kookmin Bank"], "category": "은행", "official_domains": ["kbstar.com", "kbfg.com"], "keywords": ["kbstar", "kookmin"]},
-    {"name": "신한은행", "aliases": ["신한", "Shinhan Bank", "신한 SOL"], "category": "은행", "official_domains": ["shinhan.com"], "keywords": ["shinhan"]},
-    {"name": "우리은행", "aliases": ["Woori Bank", "우리WON뱅킹"], "category": "은행", "official_domains": ["wooribank.com", "woorifg.com"], "keywords": ["wooribank"]},
-    {"name": "하나은행", "aliases": ["KEB하나은행", "Hana Bank", "하나원큐"], "category": "은행", "official_domains": ["kebhana.com", "hanabank.com", "hanafn.com"], "keywords": ["kebhana", "hanabank"]},
-    {"name": "NH농협은행", "aliases": ["농협", "농협은행", "NH농협", "NH Bank"], "category": "은행", "official_domains": ["nonghyup.com", "nhbank.com"], "keywords": ["nonghyup"]},
-    {"name": "IBK기업은행", "aliases": ["기업은행", "IBK"], "category": "은행", "official_domains": ["ibk.co.kr"], "keywords": []},
-    {"name": "카카오뱅크", "aliases": ["kakaobank"], "category": "은행", "official_domains": ["kakaobank.com"], "keywords": ["kakaobank"]},
-    {"name": "토스", "aliases": ["Toss", "토스뱅크"], "category": "금융", "official_domains": ["toss.im", "tossbank.com"], "keywords": ["tossbank"]},
-    {"name": "KB국민카드", "aliases": ["국민카드"], "category": "카드", "official_domains": ["kbcard.com"], "keywords": ["kbcard"]},
-    {"name": "신한카드", "aliases": ["Shinhan Card"], "category": "카드", "official_domains": ["shinhancard.com"], "keywords": ["shinhancard"]},
-    {"name": "삼성카드", "aliases": ["Samsung Card"], "category": "카드", "official_domains": ["samsungcard.com"], "keywords": ["samsungcard"]},
-    {"name": "현대카드", "aliases": ["Hyundai Card"], "category": "카드", "official_domains": ["hyundaicard.com"], "keywords": ["hyundaicard"]},
-    {"name": "네이버", "aliases": ["NAVER", "네이버페이", "Naver Pay"], "category": "포털", "official_domains": ["naver.com", "naver.me", "navercorp.com", "pay.naver.com"], "keywords": ["naver"]},
-    {"name": "카카오", "aliases": ["Kakao", "카카오톡", "카카오페이", "KakaoTalk", "Daum", "다음"], "category": "포털", "official_domains": ["kakao.com", "kakaocorp.com", "kakaopay.com", "daum.net"], "keywords": ["kakao", "kakaopay", "kakaotalk"]},
-    {"name": "쿠팡", "aliases": ["Coupang"], "category": "쇼핑", "official_domains": ["coupang.com"], "keywords": ["coupang"]},
-    {"name": "11번가", "aliases": ["11st"], "category": "쇼핑", "official_domains": ["11st.co.kr"], "keywords": []},
-    {"name": "G마켓", "aliases": ["Gmarket", "지마켓"], "category": "쇼핑", "official_domains": ["gmarket.co.kr"], "keywords": ["gmarket"]},
-    {"name": "우체국", "aliases": ["우정사업본부", "우체국택배", "Korea Post", "인터넷우체국"], "category": "공공", "official_domains": ["epost.go.kr", "koreapost.go.kr"], "keywords": ["epost", "koreapost"]},
-    {"name": "국세청", "aliases": ["홈택스", "Hometax", "손택스"], "category": "공공", "official_domains": ["nts.go.kr", "hometax.go.kr"], "keywords": ["hometax"]},
-    {"name": "정부24", "aliases": ["대한민국 정부"], "category": "공공", "official_domains": ["gov.kr"], "keywords": []},
-    {"name": "국민건강보험공단", "aliases": ["건강보험", "국민건강보험"], "category": "공공", "official_domains": ["nhis.or.kr"], "keywords": []},
-    {"name": "경찰청", "aliases": ["사이버수사국"], "category": "공공", "official_domains": ["police.go.kr"], "keywords": []},
-    {"name": "CJ대한통운", "aliases": ["대한통운", "CJ Logistics"], "category": "택배", "official_domains": ["cjlogistics.com"], "keywords": ["cjlogistics"]},
-    {"name": "한진택배", "aliases": ["한진"], "category": "택배", "official_domains": ["hanjin.com", "hanjin.co.kr"], "keywords": []},
-    {"name": "롯데택배", "aliases": ["롯데글로벌로지스"], "category": "택배", "official_domains": ["lotteglogis.com"], "keywords": ["lotteglogis"]},
-    {"name": "삼성", "aliases": ["Samsung", "삼성전자"], "category": "기업", "official_domains": ["samsung.com"], "keywords": ["samsung"]},
-    {"name": "Apple", "aliases": ["애플", "iCloud", "Apple ID"], "category": "글로벌", "official_domains": ["apple.com", "icloud.com"], "keywords": ["icloud", "appleid"]},
-    {"name": "Google", "aliases": ["구글", "Gmail"], "category": "글로벌", "official_domains": ["google.com", "gmail.com", "youtube.com", "google.co.kr"], "keywords": ["google", "gmail"]},
-    {"name": "Microsoft", "aliases": ["마이크로소프트", "Outlook", "Office 365", "Microsoft 365", "OneDrive"], "category": "글로벌", "official_domains": ["microsoft.com", "live.com", "office.com", "microsoftonline.com", "outlook.com", "sharepoint.com", "onedrive.com"], "keywords": ["microsoft", "microsoftonline", "onedrive", "sharepoint"]},
-    {"name": "PayPal", "aliases": ["페이팔"], "category": "글로벌", "official_domains": ["paypal.com"], "keywords": ["paypal"]},
-    {"name": "Amazon", "aliases": ["아마존"], "category": "글로벌", "official_domains": ["amazon.com", "amazon.co.jp", "amazon.co.uk", "amazon.de"], "keywords": ["amazon"]},
-    {"name": "Netflix", "aliases": ["넷플릭스"], "category": "글로벌", "official_domains": ["netflix.com"], "keywords": ["netflix"]},
-    {"name": "Meta", "aliases": ["Facebook", "페이스북", "Instagram", "인스타그램"], "category": "글로벌", "official_domains": ["facebook.com", "instagram.com", "meta.com"], "keywords": ["facebook", "instagram"]},
-    {"name": "DHL", "aliases": ["DHL Express"], "category": "택배", "official_domains": ["dhl.com"], "keywords": []}
-  ]
+ "_설명": "scripts/import_brands.py 가 config/brands_team.csv(팀 조사 목록)에서 만든 파일. 직접 고치지 말고 CSV를 고친 뒤 스크립트를 다시 실행한다.",
+ "brands": [
+  {
+   "id": "kbstar",
+   "name": "KB국민은행",
+   "aliases": [
+    "KB Kookmin Bank",
+    "국민은행",
+    "KB스타뱅킹",
+    "Kookmin Bank"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "kbstar.com",
+    "kbfg.com"
+   ],
+   "keywords": [
+    "kbstar",
+    "kookmin"
+   ]
+  },
+  {
+   "id": "shinhan",
+   "name": "신한은행",
+   "aliases": [
+    "Shinhan Bank",
+    "신한",
+    "신한 SOL"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "shinhan.com",
+    "shinhangroup.com"
+   ],
+   "keywords": [
+    "shinhan",
+    "shinhangroup"
+   ]
+  },
+  {
+   "id": "woori",
+   "name": "우리은행",
+   "aliases": [
+    "Woori Bank",
+    "우리WON뱅킹"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "wooribank.com",
+    "woorifg.com"
+   ],
+   "keywords": [
+    "wooribank",
+    "woorifg"
+   ]
+  },
+  {
+   "id": "hana",
+   "name": "하나은행",
+   "aliases": [
+    "Hana Bank",
+    "KEB하나은행",
+    "하나원큐"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "kebhana.com",
+    "hanabank.com",
+    "hanafn.com"
+   ],
+   "keywords": [
+    "kebhana",
+    "hanabank",
+    "hanafn"
+   ]
+  },
+  {
+   "id": "nonghyup",
+   "name": "NH농협은행",
+   "aliases": [
+    "NongHyup Bank",
+    "농협",
+    "농협은행",
+    "NH농협",
+    "NH Bank"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "nonghyup.com",
+    "nhbank.com",
+    "nhqv.com"
+   ],
+   "keywords": [
+    "nonghyup",
+    "nhbank"
+   ]
+  },
+  {
+   "id": "ibk",
+   "name": "IBK기업은행",
+   "aliases": [
+    "IBK Industrial Bank of Korea",
+    "기업은행",
+    "IBK"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "ibk.co.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "kakaobank",
+   "name": "카카오뱅크",
+   "aliases": [
+    "KakaoBank",
+    "kakaobank"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "kakaobank.com"
+   ],
+   "keywords": [
+    "kakaobank"
+   ]
+  },
+  {
+   "id": "tossbank",
+   "name": "토스뱅크",
+   "aliases": [
+    "Toss Bank"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "tossbank.com"
+   ],
+   "keywords": [
+    "tossbank"
+   ]
+  },
+  {
+   "id": "kbank",
+   "name": "케이뱅크",
+   "aliases": [
+    "K bank"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "kbanknow.com"
+   ],
+   "keywords": [
+    "kbanknow"
+   ]
+  },
+  {
+   "id": "scfirst",
+   "name": "SC제일은행",
+   "aliases": [
+    "SC First Bank"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "standardchartered.co.kr"
+   ],
+   "keywords": [
+    "standardchartered"
+   ]
+  },
+  {
+   "id": "kfcc",
+   "name": "새마을금고",
+   "aliases": [
+    "MG Saemaul Geumgo"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "kfcc.co.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "epostbank",
+   "name": "우체국예금",
+   "aliases": [
+    "Korea Post Bank"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "epostbank.go.kr"
+   ],
+   "keywords": [
+    "epostbank"
+   ]
+  },
+  {
+   "id": "busanbank",
+   "name": "부산은행",
+   "aliases": [
+    "BNK Busan Bank"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "busanbank.co.kr"
+   ],
+   "keywords": [
+    "busanbank"
+   ]
+  },
+  {
+   "id": "imbank",
+   "name": "iM뱅크(대구은행)",
+   "aliases": [
+    "iM뱅크",
+    "대구은행",
+    "iM Bank (DGB)",
+    "iM Bank",
+    "DGB"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "imbank.co.kr",
+    "dgb.co.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "suhyup",
+   "name": "Sh수협은행",
+   "aliases": [
+    "Suhyup Bank"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "suhyup-bank.com"
+   ],
+   "keywords": [
+    "suhyup-bank"
+   ]
+  },
+  {
+   "id": "cu",
+   "name": "신협",
+   "aliases": [
+    "National Credit Union Federation of Korea"
+   ],
+   "category": "은행",
+   "region": "국내",
+   "official_domains": [
+    "cu.co.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "samsungcard",
+   "name": "삼성카드",
+   "aliases": [
+    "Samsung Card"
+   ],
+   "category": "카드",
+   "region": "국내",
+   "official_domains": [
+    "samsungcard.com"
+   ],
+   "keywords": [
+    "samsungcard"
+   ]
+  },
+  {
+   "id": "hyundaicard",
+   "name": "현대카드",
+   "aliases": [
+    "Hyundai Card"
+   ],
+   "category": "카드",
+   "region": "국내",
+   "official_domains": [
+    "hyundaicard.com"
+   ],
+   "keywords": [
+    "hyundaicard"
+   ]
+  },
+  {
+   "id": "lottecard",
+   "name": "롯데카드",
+   "aliases": [
+    "Lotte Card"
+   ],
+   "category": "카드",
+   "region": "국내",
+   "official_domains": [
+    "lottecard.co.kr"
+   ],
+   "keywords": [
+    "lottecard"
+   ]
+  },
+  {
+   "id": "shinhancard",
+   "name": "신한카드",
+   "aliases": [
+    "Shinhan Card"
+   ],
+   "category": "카드",
+   "region": "국내",
+   "official_domains": [
+    "shinhancard.com"
+   ],
+   "keywords": [
+    "shinhancard"
+   ]
+  },
+  {
+   "id": "kbcard",
+   "name": "KB국민카드",
+   "aliases": [
+    "KB Kookmin Card",
+    "국민카드"
+   ],
+   "category": "카드",
+   "region": "국내",
+   "official_domains": [
+    "kbcard.com"
+   ],
+   "keywords": [
+    "kbcard"
+   ]
+  },
+  {
+   "id": "hanacard",
+   "name": "하나카드",
+   "aliases": [
+    "Hana Card"
+   ],
+   "category": "카드",
+   "region": "국내",
+   "official_domains": [
+    "hanacard.co.kr"
+   ],
+   "keywords": [
+    "hanacard"
+   ]
+  },
+  {
+   "id": "wooricard",
+   "name": "우리카드",
+   "aliases": [
+    "Woori Card"
+   ],
+   "category": "카드",
+   "region": "국내",
+   "official_domains": [
+    "wooricard.com"
+   ],
+   "keywords": [
+    "wooricard"
+   ]
+  },
+  {
+   "id": "bccard",
+   "name": "BC카드",
+   "aliases": [
+    "BC Card"
+   ],
+   "category": "카드",
+   "region": "국내",
+   "official_domains": [
+    "bccard.com"
+   ],
+   "keywords": [
+    "bccard"
+   ]
+  },
+  {
+   "id": "kiwoom",
+   "name": "키움증권",
+   "aliases": [
+    "Kiwoom Securities"
+   ],
+   "category": "증권",
+   "region": "국내",
+   "official_domains": [
+    "kiwoom.com"
+   ],
+   "keywords": [
+    "kiwoom"
+   ]
+  },
+  {
+   "id": "miraeasset",
+   "name": "미래에셋증권",
+   "aliases": [
+    "Mirae Asset Securities"
+   ],
+   "category": "증권",
+   "region": "국내",
+   "official_domains": [
+    "miraeasset.com",
+    "securities.miraeasset.com"
+   ],
+   "keywords": [
+    "miraeasset"
+   ]
+  },
+  {
+   "id": "samsungpop",
+   "name": "삼성증권",
+   "aliases": [
+    "Samsung Securities"
+   ],
+   "category": "증권",
+   "region": "국내",
+   "official_domains": [
+    "samsungpop.com"
+   ],
+   "keywords": [
+    "samsungpop"
+   ]
+  },
+  {
+   "id": "truefriend",
+   "name": "한국투자증권",
+   "aliases": [
+    "Korea Investment & Securities"
+   ],
+   "category": "증권",
+   "region": "국내",
+   "official_domains": [
+    "truefriend.com"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "toss",
+   "name": "토스",
+   "aliases": [
+    "Toss",
+    "토스뱅크"
+   ],
+   "category": "간편결제",
+   "region": "국내",
+   "official_domains": [
+    "toss.im",
+    "tosspayments.com"
+   ],
+   "keywords": [
+    "tosspayments",
+    "tossbank"
+   ]
+  },
+  {
+   "id": "kakaopay",
+   "name": "카카오페이",
+   "aliases": [
+    "KakaoPay"
+   ],
+   "category": "간편결제",
+   "region": "국내",
+   "official_domains": [
+    "kakaopay.com"
+   ],
+   "keywords": [
+    "kakaopay"
+   ]
+  },
+  {
+   "id": "payco",
+   "name": "페이코",
+   "aliases": [
+    "PAYCO"
+   ],
+   "category": "간편결제",
+   "region": "국내",
+   "official_domains": [
+    "payco.com"
+   ],
+   "keywords": [
+    "payco"
+   ]
+  },
+  {
+   "id": "upbit",
+   "name": "업비트",
+   "aliases": [
+    "Upbit"
+   ],
+   "category": "가상자산",
+   "region": "국내",
+   "official_domains": [
+    "upbit.com"
+   ],
+   "keywords": [
+    "upbit"
+   ]
+  },
+  {
+   "id": "bithumb",
+   "name": "빗썸",
+   "aliases": [
+    "Bithumb"
+   ],
+   "category": "가상자산",
+   "region": "국내",
+   "official_domains": [
+    "bithumb.com"
+   ],
+   "keywords": [
+    "bithumb"
+   ]
+  },
+  {
+   "id": "naver",
+   "name": "네이버",
+   "aliases": [
+    "NAVER",
+    "네이버페이",
+    "Naver Pay"
+   ],
+   "category": "포털",
+   "region": "국내",
+   "official_domains": [
+    "naver.com",
+    "naver.me",
+    "navercorp.com"
+   ],
+   "keywords": [
+    "naver",
+    "navercorp"
+   ]
+  },
+  {
+   "id": "kakao",
+   "name": "카카오/다음",
+   "aliases": [
+    "카카오",
+    "Kakao / Daum",
+    "Kakao",
+    "Daum",
+    "카카오톡",
+    "카카오페이",
+    "KakaoTalk"
+   ],
+   "category": "포털",
+   "region": "국내",
+   "official_domains": [
+    "kakao.com",
+    "kakaocorp.com",
+    "daum.net",
+    "kakaotalk.com"
+   ],
+   "keywords": [
+    "kakao",
+    "kakaocorp",
+    "kakaotalk",
+    "kakaopay"
+   ]
+  },
+  {
+   "id": "cjlogistics",
+   "name": "CJ대한통운",
+   "aliases": [
+    "CJ Logistics",
+    "대한통운"
+   ],
+   "category": "택배·물류",
+   "region": "국내",
+   "official_domains": [
+    "cjlogistics.com",
+    "cjthemarket.com"
+   ],
+   "keywords": [
+    "cjlogistics",
+    "cjthemarket"
+   ]
+  },
+  {
+   "id": "hanjin",
+   "name": "한진택배",
+   "aliases": [
+    "Hanjin Express",
+    "한진"
+   ],
+   "category": "택배·물류",
+   "region": "국내",
+   "official_domains": [
+    "hanjin.com",
+    "hanjin.co.kr"
+   ],
+   "keywords": [
+    "hanjin"
+   ]
+  },
+  {
+   "id": "lotteglogis",
+   "name": "롯데글로벌로지스(롯데택배)",
+   "aliases": [
+    "롯데글로벌로지스",
+    "롯데택배",
+    "Lotte Global Logistics"
+   ],
+   "category": "택배·물류",
+   "region": "국내",
+   "official_domains": [
+    "lotteglogis.com"
+   ],
+   "keywords": [
+    "lotteglogis"
+   ]
+  },
+  {
+   "id": "epost",
+   "name": "우체국(택배)",
+   "aliases": [
+    "우체국",
+    "Korea Post",
+    "우정사업본부",
+    "우체국택배",
+    "인터넷우체국"
+   ],
+   "category": "택배·물류",
+   "region": "국내",
+   "official_domains": [
+    "epost.go.kr",
+    "koreapost.go.kr"
+   ],
+   "keywords": [
+    "epost",
+    "koreapost"
+   ]
+  },
+  {
+   "id": "logen",
+   "name": "로젠택배",
+   "aliases": [
+    "Logen"
+   ],
+   "category": "택배·물류",
+   "region": "국내",
+   "official_domains": [
+    "ilogen.com"
+   ],
+   "keywords": [
+    "ilogen"
+   ]
+  },
+  {
+   "id": "coupang",
+   "name": "쿠팡",
+   "aliases": [
+    "Coupang"
+   ],
+   "category": "쇼핑",
+   "region": "국내",
+   "official_domains": [
+    "coupang.com",
+    "coupangeats.com"
+   ],
+   "keywords": [
+    "coupang",
+    "coupangeats"
+   ]
+  },
+  {
+   "id": "11st",
+   "name": "11번가",
+   "aliases": [
+    "11st"
+   ],
+   "category": "쇼핑",
+   "region": "국내",
+   "official_domains": [
+    "11st.co.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "gmarket",
+   "name": "G마켓",
+   "aliases": [
+    "Gmarket",
+    "지마켓"
+   ],
+   "category": "쇼핑",
+   "region": "국내",
+   "official_domains": [
+    "gmarket.co.kr"
+   ],
+   "keywords": [
+    "gmarket"
+   ]
+  },
+  {
+   "id": "auction",
+   "name": "옥션",
+   "aliases": [
+    "Auction"
+   ],
+   "category": "쇼핑",
+   "region": "국내",
+   "official_domains": [
+    "auction.co.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "ssg",
+   "name": "SSG닷컴",
+   "aliases": [
+    "SSG.COM"
+   ],
+   "category": "쇼핑",
+   "region": "국내",
+   "official_domains": [
+    "ssg.com"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "musinsa",
+   "name": "무신사",
+   "aliases": [
+    "MUSINSA"
+   ],
+   "category": "쇼핑",
+   "region": "국내",
+   "official_domains": [
+    "musinsa.com"
+   ],
+   "keywords": [
+    "musinsa"
+   ]
+  },
+  {
+   "id": "baemin",
+   "name": "배달의민족",
+   "aliases": [
+    "Baemin"
+   ],
+   "category": "쇼핑",
+   "region": "국내",
+   "official_domains": [
+    "baemin.com",
+    "woowahan.com"
+   ],
+   "keywords": [
+    "baemin",
+    "woowahan"
+   ]
+  },
+  {
+   "id": "daangn",
+   "name": "당근",
+   "aliases": [
+    "Daangn (Karrot)",
+    "Daangn",
+    "Karrot"
+   ],
+   "category": "쇼핑",
+   "region": "국내",
+   "official_domains": [
+    "daangn.com",
+    "karrotmarket.com"
+   ],
+   "keywords": [
+    "daangn",
+    "karrotmarket"
+   ]
+  },
+  {
+   "id": "skt",
+   "name": "SK텔레콤",
+   "aliases": [
+    "SK Telecom"
+   ],
+   "category": "통신",
+   "region": "국내",
+   "official_domains": [
+    "sktelecom.com",
+    "tworld.co.kr"
+   ],
+   "keywords": [
+    "sktelecom"
+   ]
+  },
+  {
+   "id": "kt",
+   "name": "KT",
+   "aliases": [],
+   "category": "통신",
+   "region": "국내",
+   "official_domains": [
+    "kt.com"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "lguplus",
+   "name": "LG유플러스",
+   "aliases": [
+    "LG U+"
+   ],
+   "category": "통신",
+   "region": "국내",
+   "official_domains": [
+    "lguplus.com",
+    "uplus.co.kr"
+   ],
+   "keywords": [
+    "lguplus"
+   ]
+  },
+  {
+   "id": "gov24",
+   "name": "정부24",
+   "aliases": [
+    "Gov24",
+    "대한민국 정부"
+   ],
+   "category": "공공기관",
+   "region": "국내",
+   "official_domains": [
+    "gov.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "hometax",
+   "name": "국세청 홈택스",
+   "aliases": [
+    "National Tax Service / Hometax",
+    "National Tax Service",
+    "Hometax",
+    "국세청",
+    "홈택스",
+    "손택스"
+   ],
+   "category": "공공기관",
+   "region": "국내",
+   "official_domains": [
+    "hometax.go.kr",
+    "nts.go.kr"
+   ],
+   "keywords": [
+    "hometax"
+   ]
+  },
+  {
+   "id": "nhis",
+   "name": "국민건강보험공단",
+   "aliases": [
+    "National Health Insurance Service",
+    "건강보험",
+    "국민건강보험"
+   ],
+   "category": "공공기관",
+   "region": "국내",
+   "official_domains": [
+    "nhis.or.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "nps",
+   "name": "국민연금공단",
+   "aliases": [
+    "National Pension Service"
+   ],
+   "category": "공공기관",
+   "region": "국내",
+   "official_domains": [
+    "nps.or.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "police",
+   "name": "경찰청",
+   "aliases": [
+    "Korean National Police Agency",
+    "사이버수사국"
+   ],
+   "category": "공공기관",
+   "region": "국내",
+   "official_domains": [
+    "police.go.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "efine",
+   "name": "교통민원24(이파인)",
+   "aliases": [
+    "교통민원24",
+    "이파인",
+    "eFine Traffic Fines"
+   ],
+   "category": "공공기관",
+   "region": "국내",
+   "official_domains": [
+    "efine.go.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "spo",
+   "name": "대검찰청",
+   "aliases": [
+    "Supreme Prosecutors' Office"
+   ],
+   "category": "공공기관",
+   "region": "국내",
+   "official_domains": [
+    "spo.go.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "scourt",
+   "name": "대한민국 법원",
+   "aliases": [
+    "Supreme Court of Korea"
+   ],
+   "category": "공공기관",
+   "region": "국내",
+   "official_domains": [
+    "scourt.go.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "fss",
+   "name": "금융감독원",
+   "aliases": [
+    "Financial Supervisory Service"
+   ],
+   "category": "공공기관",
+   "region": "국내",
+   "official_domains": [
+    "fss.or.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "kdca",
+   "name": "질병관리청",
+   "aliases": [
+    "KDCA"
+   ],
+   "category": "공공기관",
+   "region": "국내",
+   "official_domains": [
+    "kdca.go.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "kepco",
+   "name": "한국전력공사",
+   "aliases": [
+    "KEPCO"
+   ],
+   "category": "공공기관",
+   "region": "국내",
+   "official_domains": [
+    "kepco.co.kr"
+   ],
+   "keywords": [
+    "kepco"
+   ]
+  },
+  {
+   "id": "google",
+   "name": "구글",
+   "aliases": [
+    "Google",
+    "Gmail"
+   ],
+   "category": "IT",
+   "region": "글로벌",
+   "official_domains": [
+    "google.com",
+    "google.co.kr",
+    "gmail.com",
+    "youtube.com"
+   ],
+   "keywords": [
+    "google",
+    "gmail",
+    "youtube"
+   ]
+  },
+  {
+   "id": "microsoft",
+   "name": "마이크로소프트",
+   "aliases": [
+    "Microsoft",
+    "Outlook",
+    "Office 365",
+    "Microsoft 365",
+    "OneDrive"
+   ],
+   "category": "IT",
+   "region": "글로벌",
+   "official_domains": [
+    "microsoft.com",
+    "live.com",
+    "office.com",
+    "microsoftonline.com",
+    "outlook.com",
+    "onedrive.com",
+    "office365.com"
+   ],
+   "keywords": [
+    "microsoft",
+    "microsoftonline",
+    "onedrive",
+    "office365"
+   ]
+  },
+  {
+   "id": "apple",
+   "name": "애플",
+   "aliases": [
+    "Apple",
+    "iCloud",
+    "Apple ID"
+   ],
+   "category": "IT",
+   "region": "글로벌",
+   "official_domains": [
+    "apple.com",
+    "icloud.com"
+   ],
+   "keywords": [
+    "icloud",
+    "appleid"
+   ]
+  },
+  {
+   "id": "samsung",
+   "name": "삼성",
+   "aliases": [
+    "Samsung",
+    "삼성전자"
+   ],
+   "category": "IT",
+   "region": "글로벌",
+   "official_domains": [
+    "samsung.com"
+   ],
+   "keywords": [
+    "samsung"
+   ]
+  },
+  {
+   "id": "adobe",
+   "name": "어도비",
+   "aliases": [
+    "Adobe"
+   ],
+   "category": "IT",
+   "region": "글로벌",
+   "official_domains": [
+    "adobe.com"
+   ],
+   "keywords": [
+    "adobe"
+   ]
+  },
+  {
+   "id": "dropbox",
+   "name": "드롭박스",
+   "aliases": [
+    "Dropbox"
+   ],
+   "category": "IT",
+   "region": "글로벌",
+   "official_domains": [
+    "dropbox.com"
+   ],
+   "keywords": [
+    "dropbox"
+   ]
+  },
+  {
+   "id": "docusign",
+   "name": "도큐사인",
+   "aliases": [
+    "DocuSign"
+   ],
+   "category": "IT",
+   "region": "글로벌",
+   "official_domains": [
+    "docusign.com",
+    "docusign.net"
+   ],
+   "keywords": [
+    "docusign"
+   ]
+  },
+  {
+   "id": "meta",
+   "name": "메타(페이스북/인스타그램)",
+   "aliases": [
+    "메타",
+    "페이스북",
+    "인스타그램",
+    "Meta",
+    "Facebook",
+    "Instagram"
+   ],
+   "category": "SNS·메신저",
+   "region": "글로벌",
+   "official_domains": [
+    "facebook.com",
+    "instagram.com",
+    "meta.com",
+    "fb.com",
+    "whatsapp.com"
+   ],
+   "keywords": [
+    "facebook",
+    "instagram",
+    "whatsapp"
+   ]
+  },
+  {
+   "id": "x",
+   "name": "X(트위터)",
+   "aliases": [
+    "X",
+    "트위터",
+    "X (Twitter)",
+    "Twitter"
+   ],
+   "category": "SNS·메신저",
+   "region": "글로벌",
+   "official_domains": [
+    "x.com",
+    "twitter.com"
+   ],
+   "keywords": [
+    "twitter"
+   ]
+  },
+  {
+   "id": "linkedin",
+   "name": "링크드인",
+   "aliases": [
+    "LinkedIn"
+   ],
+   "category": "SNS·메신저",
+   "region": "글로벌",
+   "official_domains": [
+    "linkedin.com"
+   ],
+   "keywords": [
+    "linkedin"
+   ]
+  },
+  {
+   "id": "telegram",
+   "name": "텔레그램",
+   "aliases": [
+    "Telegram"
+   ],
+   "category": "SNS·메신저",
+   "region": "글로벌",
+   "official_domains": [
+    "telegram.org",
+    "t.me"
+   ],
+   "keywords": [
+    "telegram"
+   ]
+  },
+  {
+   "id": "line",
+   "name": "라인",
+   "aliases": [
+    "LINE"
+   ],
+   "category": "SNS·메신저",
+   "region": "글로벌",
+   "official_domains": [
+    "line.me",
+    "linecorp.com"
+   ],
+   "keywords": [
+    "linecorp"
+   ]
+  },
+  {
+   "id": "discord",
+   "name": "디스코드",
+   "aliases": [
+    "Discord"
+   ],
+   "category": "SNS·메신저",
+   "region": "글로벌",
+   "official_domains": [
+    "discord.com",
+    "discord.gg"
+   ],
+   "keywords": [
+    "discord"
+   ]
+  },
+  {
+   "id": "amazon",
+   "name": "아마존",
+   "aliases": [
+    "Amazon"
+   ],
+   "category": "쇼핑",
+   "region": "글로벌",
+   "official_domains": [
+    "amazon.com",
+    "amazon.co.jp",
+    "aws.amazon.com"
+   ],
+   "keywords": [
+    "amazon"
+   ]
+  },
+  {
+   "id": "ebay",
+   "name": "이베이",
+   "aliases": [
+    "eBay"
+   ],
+   "category": "쇼핑",
+   "region": "글로벌",
+   "official_domains": [
+    "ebay.com"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "aliexpress",
+   "name": "알리익스프레스",
+   "aliases": [
+    "AliExpress"
+   ],
+   "category": "쇼핑",
+   "region": "글로벌",
+   "official_domains": [
+    "aliexpress.com",
+    "alibaba.com"
+   ],
+   "keywords": [
+    "aliexpress",
+    "alibaba"
+   ]
+  },
+  {
+   "id": "temu",
+   "name": "테무",
+   "aliases": [
+    "Temu"
+   ],
+   "category": "쇼핑",
+   "region": "글로벌",
+   "official_domains": [
+    "temu.com"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "netflix",
+   "name": "넷플릭스",
+   "aliases": [
+    "Netflix"
+   ],
+   "category": "스트리밍",
+   "region": "글로벌",
+   "official_domains": [
+    "netflix.com"
+   ],
+   "keywords": [
+    "netflix"
+   ]
+  },
+  {
+   "id": "spotify",
+   "name": "스포티파이",
+   "aliases": [
+    "Spotify"
+   ],
+   "category": "스트리밍",
+   "region": "글로벌",
+   "official_domains": [
+    "spotify.com"
+   ],
+   "keywords": [
+    "spotify"
+   ]
+  },
+  {
+   "id": "steam",
+   "name": "스팀",
+   "aliases": [
+    "Steam"
+   ],
+   "category": "게임",
+   "region": "글로벌",
+   "official_domains": [
+    "steampowered.com",
+    "steamcommunity.com"
+   ],
+   "keywords": [
+    "steampowered",
+    "steamcommunity"
+   ]
+  },
+  {
+   "id": "roblox",
+   "name": "로블록스",
+   "aliases": [
+    "Roblox"
+   ],
+   "category": "게임",
+   "region": "글로벌",
+   "official_domains": [
+    "roblox.com"
+   ],
+   "keywords": [
+    "roblox"
+   ]
+  },
+  {
+   "id": "paypal",
+   "name": "페이팔",
+   "aliases": [
+    "PayPal"
+   ],
+   "category": "간편결제",
+   "region": "글로벌",
+   "official_domains": [
+    "paypal.com"
+   ],
+   "keywords": [
+    "paypal"
+   ]
+  },
+  {
+   "id": "visa",
+   "name": "비자",
+   "aliases": [
+    "Visa"
+   ],
+   "category": "카드",
+   "region": "글로벌",
+   "official_domains": [
+    "visa.com",
+    "visa.co.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "mastercard",
+   "name": "마스터카드",
+   "aliases": [
+    "Mastercard"
+   ],
+   "category": "카드",
+   "region": "글로벌",
+   "official_domains": [
+    "mastercard.com"
+   ],
+   "keywords": [
+    "mastercard"
+   ]
+  },
+  {
+   "id": "amex",
+   "name": "아메리칸 익스프레스",
+   "aliases": [
+    "American Express"
+   ],
+   "category": "카드",
+   "region": "글로벌",
+   "official_domains": [
+    "americanexpress.com"
+   ],
+   "keywords": [
+    "americanexpress"
+   ]
+  },
+  {
+   "id": "chase",
+   "name": "체이스",
+   "aliases": [
+    "Chase"
+   ],
+   "category": "은행",
+   "region": "글로벌",
+   "official_domains": [
+    "chase.com"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "bofa",
+   "name": "뱅크오브아메리카",
+   "aliases": [
+    "Bank of America"
+   ],
+   "category": "은행",
+   "region": "글로벌",
+   "official_domains": [
+    "bankofamerica.com"
+   ],
+   "keywords": [
+    "bankofamerica"
+   ]
+  },
+  {
+   "id": "wellsfargo",
+   "name": "웰스파고",
+   "aliases": [
+    "Wells Fargo"
+   ],
+   "category": "은행",
+   "region": "글로벌",
+   "official_domains": [
+    "wellsfargo.com"
+   ],
+   "keywords": [
+    "wellsfargo"
+   ]
+  },
+  {
+   "id": "coinbase",
+   "name": "코인베이스",
+   "aliases": [
+    "Coinbase"
+   ],
+   "category": "가상자산",
+   "region": "글로벌",
+   "official_domains": [
+    "coinbase.com"
+   ],
+   "keywords": [
+    "coinbase"
+   ]
+  },
+  {
+   "id": "binance",
+   "name": "바이낸스",
+   "aliases": [
+    "Binance"
+   ],
+   "category": "가상자산",
+   "region": "글로벌",
+   "official_domains": [
+    "binance.com"
+   ],
+   "keywords": [
+    "binance"
+   ]
+  },
+  {
+   "id": "metamask",
+   "name": "메타마스크",
+   "aliases": [
+    "MetaMask"
+   ],
+   "category": "가상자산",
+   "region": "글로벌",
+   "official_domains": [
+    "metamask.io"
+   ],
+   "keywords": [
+    "metamask"
+   ]
+  },
+  {
+   "id": "dhl",
+   "name": "DHL",
+   "aliases": [
+    "DHL Express"
+   ],
+   "category": "택배·물류",
+   "region": "글로벌",
+   "official_domains": [
+    "dhl.com",
+    "dhl.co.kr"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "fedex",
+   "name": "페덱스",
+   "aliases": [
+    "FedEx"
+   ],
+   "category": "택배·물류",
+   "region": "글로벌",
+   "official_domains": [
+    "fedex.com"
+   ],
+   "keywords": [
+    "fedex"
+   ]
+  },
+  {
+   "id": "ups",
+   "name": "UPS",
+   "aliases": [],
+   "category": "택배·물류",
+   "region": "글로벌",
+   "official_domains": [
+    "ups.com"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "usps",
+   "name": "미국우정청",
+   "aliases": [
+    "USPS"
+   ],
+   "category": "택배·물류",
+   "region": "글로벌",
+   "official_domains": [
+    "usps.com"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "booking",
+   "name": "부킹닷컴",
+   "aliases": [
+    "Booking.com"
+   ],
+   "category": "여행",
+   "region": "글로벌",
+   "official_domains": [
+    "booking.com"
+   ],
+   "keywords": []
+  },
+  {
+   "id": "airbnb",
+   "name": "에어비앤비",
+   "aliases": [
+    "Airbnb"
+   ],
+   "category": "여행",
+   "region": "글로벌",
+   "official_domains": [
+    "airbnb.com",
+    "airbnb.co.kr"
+   ],
+   "keywords": [
+    "airbnb"
+   ]
+  },
+  {
+   "id": "yahoo",
+   "name": "야후",
+   "aliases": [
+    "Yahoo"
+   ],
+   "category": "포털",
+   "region": "글로벌",
+   "official_domains": [
+    "yahoo.com"
+   ],
+   "keywords": [
+    "yahoo"
+   ]
+  },
+  {
+   "id": "att",
+   "name": "AT&T",
+   "aliases": [],
+   "category": "통신",
+   "region": "글로벌",
+   "official_domains": [
+    "att.com",
+    "att.net"
+   ],
+   "keywords": []
+  }
+ ]
 }

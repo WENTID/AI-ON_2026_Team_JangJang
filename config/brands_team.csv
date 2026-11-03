@@ -1,0 +1,102 @@
+brand_id,name_ko,name_en,region,category,official_domains,phishing_urls
+kbstar,KB국민은행,KB Kookmin Bank,국내,은행,kbstar.com kbfg.com,1
+shinhan,신한은행,Shinhan Bank,국내,은행,shinhan.com shinhangroup.com,0
+woori,우리은행,Woori Bank,국내,은행,wooribank.com woorifg.com,0
+hana,하나은행,Hana Bank,국내,은행,kebhana.com hanabank.com hanafn.com,0
+nonghyup,NH농협은행,NongHyup Bank,국내,은행,nonghyup.com nhbank.com nhqv.com,0
+ibk,IBK기업은행,IBK Industrial Bank of Korea,국내,은행,ibk.co.kr,1
+kakaobank,카카오뱅크,KakaoBank,국내,은행,kakaobank.com,0
+tossbank,토스뱅크,Toss Bank,국내,은행,tossbank.com,0
+kbank,케이뱅크,K bank,국내,은행,kbanknow.com,1
+scfirst,SC제일은행,SC First Bank,국내,은행,standardchartered.co.kr,1
+kfcc,새마을금고,MG Saemaul Geumgo,국내,은행,kfcc.co.kr,0
+epostbank,우체국예금,Korea Post Bank,국내,은행,epostbank.go.kr,6
+busanbank,부산은행,BNK Busan Bank,국내,은행,busanbank.co.kr,0
+imbank,iM뱅크(대구은행),iM Bank (DGB),국내,은행,imbank.co.kr dgb.co.kr,0
+suhyup,Sh수협은행,Suhyup Bank,국내,은행,suhyup-bank.com,0
+cu,신협,National Credit Union Federation of Korea,국내,은행,cu.co.kr,0
+samsungcard,삼성카드,Samsung Card,국내,카드,samsungcard.com,0
+hyundaicard,현대카드,Hyundai Card,국내,카드,hyundaicard.com,0
+lottecard,롯데카드,Lotte Card,국내,카드,lottecard.co.kr,0
+shinhancard,신한카드,Shinhan Card,국내,카드,shinhancard.com,0
+kbcard,KB국민카드,KB Kookmin Card,국내,카드,kbcard.com,0
+hanacard,하나카드,Hana Card,국내,카드,hanacard.co.kr,0
+wooricard,우리카드,Woori Card,국내,카드,wooricard.com,0
+bccard,BC카드,BC Card,국내,카드,bccard.com,0
+kiwoom,키움증권,Kiwoom Securities,국내,증권,kiwoom.com,0
+miraeasset,미래에셋증권,Mirae Asset Securities,국내,증권,miraeasset.com securities.miraeasset.com,1
+samsungpop,삼성증권,Samsung Securities,국내,증권,samsungpop.com,0
+truefriend,한국투자증권,Korea Investment & Securities,국내,증권,truefriend.com,0
+toss,토스,Toss,국내,간편결제,toss.im tosspayments.com,0
+kakaopay,카카오페이,KakaoPay,국내,간편결제,kakaopay.com,0
+payco,페이코,PAYCO,국내,간편결제,payco.com,11
+upbit,업비트,Upbit,국내,가상자산,upbit.com,0
+bithumb,빗썸,Bithumb,국내,가상자산,bithumb.com,0
+naver,네이버,NAVER,국내,포털,naver.com naver.me navercorp.com,86
+kakao,카카오/다음,Kakao / Daum,국내,포털,kakao.com kakaocorp.com daum.net kakaotalk.com,111
+cjlogistics,CJ대한통운,CJ Logistics,국내,택배·물류,cjlogistics.com cjthemarket.com,0
+hanjin,한진택배,Hanjin Express,국내,택배·물류,hanjin.com hanjin.co.kr,0
+lotteglogis,롯데글로벌로지스(롯데택배),Lotte Global Logistics,국내,택배·물류,lotteglogis.com,0
+epost,우체국(택배),Korea Post,국내,택배·물류,epost.go.kr koreapost.go.kr,132
+logen,로젠택배,Logen,국내,택배·물류,ilogen.com,46
+coupang,쿠팡,Coupang,국내,쇼핑,coupang.com coupangeats.com,0
+11st,11번가,11st,국내,쇼핑,11st.co.kr,0
+gmarket,G마켓,Gmarket,국내,쇼핑,gmarket.co.kr,36
+auction,옥션,Auction,국내,쇼핑,auction.co.kr,0
+ssg,SSG닷컴,SSG.COM,국내,쇼핑,ssg.com,0
+musinsa,무신사,MUSINSA,국내,쇼핑,musinsa.com,0
+baemin,배달의민족,Baemin,국내,쇼핑,baemin.com woowahan.com,0
+daangn,당근,Daangn (Karrot),국내,쇼핑,daangn.com karrotmarket.com,0
+skt,SK텔레콤,SK Telecom,국내,통신,sktelecom.com tworld.co.kr,0
+kt,KT,KT,국내,통신,kt.com,0
+lguplus,LG유플러스,LG U+,국내,통신,lguplus.com uplus.co.kr,0
+gov24,정부24,Gov24,국내,공공기관,gov.kr,0
+hometax,국세청 홈택스,National Tax Service / Hometax,국내,공공기관,hometax.go.kr nts.go.kr,1
+nhis,국민건강보험공단,National Health Insurance Service,국내,공공기관,nhis.or.kr,0
+nps,국민연금공단,National Pension Service,국내,공공기관,nps.or.kr,0
+police,경찰청,Korean National Police Agency,국내,공공기관,police.go.kr,0
+efine,교통민원24(이파인),eFine Traffic Fines,국내,공공기관,efine.go.kr,0
+spo,대검찰청,Supreme Prosecutors' Office,국내,공공기관,spo.go.kr,0
+scourt,대한민국 법원,Supreme Court of Korea,국내,공공기관,scourt.go.kr,0
+fss,금융감독원,Financial Supervisory Service,국내,공공기관,fss.or.kr,0
+kdca,질병관리청,KDCA,국내,공공기관,kdca.go.kr,0
+kepco,한국전력공사,KEPCO,국내,공공기관,kepco.co.kr,1
+google,구글,Google,글로벌,IT,google.com google.co.kr gmail.com youtube.com googleusercontent.com,1636
+microsoft,마이크로소프트,Microsoft,글로벌,IT,microsoft.com live.com office.com microsoftonline.com outlook.com sharepoint.com onedrive.com office365.com,11192
+apple,애플,Apple,글로벌,IT,apple.com icloud.com,5095
+samsung,삼성,Samsung,글로벌,IT,samsung.com,63
+adobe,어도비,Adobe,글로벌,IT,adobe.com,1873
+dropbox,드롭박스,Dropbox,글로벌,IT,dropbox.com,567
+docusign,도큐사인,DocuSign,글로벌,IT,docusign.com docusign.net,609
+meta,메타(페이스북/인스타그램),Meta,글로벌,SNS·메신저,facebook.com instagram.com meta.com fb.com whatsapp.com,17830
+x,X(트위터),X (Twitter),글로벌,SNS·메신저,x.com twitter.com,382
+linkedin,링크드인,LinkedIn,글로벌,SNS·메신저,linkedin.com,2923
+telegram,텔레그램,Telegram,글로벌,SNS·메신저,telegram.org t.me,2923
+line,라인,LINE,글로벌,SNS·메신저,line.me linecorp.com,0
+discord,디스코드,Discord,글로벌,SNS·메신저,discord.com discord.gg,906
+amazon,아마존,Amazon,글로벌,쇼핑,amazon.com amazon.co.jp aws.amazon.com,5772
+ebay,이베이,eBay,글로벌,쇼핑,ebay.com,764
+aliexpress,알리익스프레스,AliExpress,글로벌,쇼핑,aliexpress.com alibaba.com,893
+temu,테무,Temu,글로벌,쇼핑,temu.com,1
+netflix,넷플릭스,Netflix,글로벌,스트리밍,netflix.com,10173
+spotify,스포티파이,Spotify,글로벌,스트리밍,spotify.com,645
+steam,스팀,Steam,글로벌,게임,steampowered.com steamcommunity.com,660
+roblox,로블록스,Roblox,글로벌,게임,roblox.com,1681
+paypal,페이팔,PayPal,글로벌,간편결제,paypal.com,2717
+visa,비자,Visa,글로벌,카드,visa.com visa.co.kr,2
+mastercard,마스터카드,Mastercard,글로벌,카드,mastercard.com,109
+amex,아메리칸 익스프레스,American Express,글로벌,카드,americanexpress.com,804
+chase,체이스,Chase,글로벌,은행,chase.com,8801
+bofa,뱅크오브아메리카,Bank of America,글로벌,은행,bankofamerica.com,2331
+wellsfargo,웰스파고,Wells Fargo,글로벌,은행,wellsfargo.com,3966
+coinbase,코인베이스,Coinbase,글로벌,가상자산,coinbase.com,2045
+binance,바이낸스,Binance,글로벌,가상자산,binance.com,589
+metamask,메타마스크,MetaMask,글로벌,가상자산,metamask.io,2363
+dhl,DHL,DHL,글로벌,택배·물류,dhl.com dhl.co.kr,4963
+fedex,페덱스,FedEx,글로벌,택배·물류,fedex.com,245
+ups,UPS,UPS,글로벌,택배·물류,ups.com,417
+usps,미국우정청,USPS,글로벌,택배·물류,usps.com,11920
+booking,부킹닷컴,Booking.com,글로벌,여행,booking.com,340
+airbnb,에어비앤비,Airbnb,글로벌,여행,airbnb.com airbnb.co.kr,231
+yahoo,야후,Yahoo,글로벌,포털,yahoo.com,1588
+att,AT&T,AT&T,글로벌,통신,att.com att.net,164

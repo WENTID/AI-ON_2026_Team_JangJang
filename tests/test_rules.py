@@ -2,7 +2,7 @@
 import cv2
 
 from app.analyzer import ai_signal, analyze, url_structure_signals
-from app.brand import find_lookalike
+from app.brand import brands_in_text, find_brand, find_lookalike
 from app.page import extract
 from app.qr_decode import decode_image
 from app.scoring import make_signal, score
@@ -45,15 +45,29 @@ def test_url_structure_signals():
 
 # ---------- 브랜드 유사 도메인 ----------
 def test_lookalike_typo():
-    assert find_lookalike("navver.com")["brand"]["name"] == "네이버"
-    assert find_lookalike("www.kbstar-login.xyz")["brand"]["name"] == "국민은행"
-    assert find_lookalike("naver.com.secure-check.top")["brand"]["name"] == "네이버"
+    assert find_lookalike("navver.com")["brand"]["id"] == "naver"
+    assert find_lookalike("www.kbstar-login.xyz")["brand"]["id"] == "kbstar"
+    assert find_lookalike("naver.com.secure-check.top")["brand"]["id"] == "naver"
 
 
 def test_official_domain_is_not_lookalike():
     assert find_lookalike("nid.naver.com") is None
     assert find_lookalike("www.kbstar.com") is None
     assert find_lookalike("example.com") is None
+    assert find_lookalike("contoso.sharepoint.com") is None  # 회사 쉐어포인트는 유사 도메인이 아님
+
+
+# ---------- 브랜드 이름 매칭 (짧은 이름·일반 단어 오탐 방지) ----------
+def test_brand_names_in_title():
+    assert brands_in_text("다음 단계로 진행 - 토스트 주문") == []
+    assert [b["id"] for b in brands_in_text("[우체국택배] 주소 확인")] == ["epost"]
+    assert [b["id"] for b in brands_in_text("토스 로그인")] == ["toss"]
+
+
+def test_find_brand_from_ai_name():
+    assert find_brand("Groups Inc") is None  # 'ups' 가 들어 있어도 UPS 아님
+    assert find_brand("KB국민은행")["id"] == "kbstar"
+    assert find_brand("Microsoft 365")["id"] == "microsoft"
 
 
 # ---------- 페이지 추출 ----------

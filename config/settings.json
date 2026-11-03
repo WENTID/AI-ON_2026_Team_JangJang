@@ -24,6 +24,8 @@
     "enabled": true,
     "model": "gemini-3.5-flash-lite",
     "timeout_sec": 25,
+    "eval_timeout_sec": 120,
+    "eval_retry_delays_sec": [30, 60, 120, 240],
     "max_requests_per_minute": 10,
     "max_text_chars": 3000,
     "min_confidence": 0.6,
@@ -57,6 +59,6 @@
     "trycloudflare.com", "translate.goog", "page.link", "replit.app", "repl.co", "surge.sh", "onrender.com",
     "fly.dev", "glide.page", "carrd.co", "tilda.ws", "wordpress.com", "blogger.com", "linktr.ee",
     "amazonaws.com", "cloudfront.net", "appspot.com", "googleapis.com", "googleusercontent.com", "azureedge.net",
-    "cloudflare-ipfs.com", "digitaloceanspaces.com", "backblazeb2.com", "dropboxusercontent.com", "wcomhost.com", "edgeone.dev", "edgeone.app", "cprapid.com", "homedns.org"
+    "cloudflare-ipfs.com", "digitaloceanspaces.com", "backblazeb2.com", "dropboxusercontent.com", "wcomhost.com", "sharepoint.com", "edgeone.dev", "edgeone.app", "cprapid.com", "homedns.org"
   ]
 }

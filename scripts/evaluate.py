@@ -86,8 +86,8 @@ def main() -> None:
                 "signals": "|".join(x["id"] for x in r["risk_reasons"]),
                 "ai": r["ai"]["message"],
             })
-        if i % 20 == 0:
-            print(f"  {i}/{len(snaps)} 처리")
+        if i % 10 == 0:
+            print(f"  {i}/{len(snaps)} 처리 (AI: {dict(ai_stats)})", flush=True)
 
     lines = [f"# 판정 성능 검증 결과", "",
              f"- 실행: {datetime.now():%Y-%m-%d %H:%M}",

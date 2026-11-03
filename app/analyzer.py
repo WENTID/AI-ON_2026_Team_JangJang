@@ -59,18 +59,23 @@ def ai_signal(result: dict, final_host: str) -> tuple[dict | None, str]:
     brand = find_brand(claimed)
     guess = (result.get("official_domain_guess") or "").lower().strip()
     if brand:
+        # 브랜드 목록에 있는 서비스(은행·택배 등)는 공식 도메인 목록으로만 엄격하게 비교한다. (AI가 속는 것 방지)
         officials = brand["official_domains"]
         genuine = host_matches(final_host, officials)
     elif guess:
+        # 목록에 없는 서비스는 회사가 여러 도메인을 쓰는 경우가 많아 AI가 추정한 대표 도메인 하나로는 부족하다.
+        # 도메인 이름이 같거나, AI가 실제 도메인을 그 회사 소유(테스트·데모·자회사 도메인 포함)로 판단하면 공식으로 본다.
         officials = [registrable(guess.split("/")[0])]
-        # 목록에 없는 서비스는 AI의 공식 도메인 추정이 틀릴 수 있어, 도메인 이름이 같으면 공식으로 본다.
-        genuine = host_matches(final_host, officials) or domain_label(officials[0]) == domain_label(final_reg)
+        genuine = (host_matches(final_host, officials) or domain_label(officials[0]) == domain_label(final_reg)
+                   or result.get("domain_matches_service") is True)
     else:
         return None, f"'{claimed}'를 표방하지만 공식 도메인을 알 수 없어 비교하지 못함"
     if genuine:
-        return None, f"'{claimed}' 공식 도메인의 페이지로 판단"
+        return None, f"'{claimed}' 운영 주체의 도메인으로 판단"
     sensitive = [i for i in result.get("requested_info", []) if i in SENSITIVE_KINDS]
-    if sensitive:
+    # 목록에 없는 서비스는 AI가 '운영 주체 도메인이 아님'이라고 분명히 답했을 때만 강한 신호로 반영한다.
+    sure_mismatch = brand is not None or result.get("domain_matches_service") is False
+    if sensitive and sure_mismatch:
         return make_signal("ai_impersonation",
                            f"'{claimed}'를 표방하며 {', '.join(sensitive)}를 요구하지만, 실제 도메인({final_reg})은 "
                            f"공식 도메인({officials[0]})이 아님", source="AI 판단"), "사칭 의심"
@@ -211,7 +216,7 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
     elif pre["score"] >= settings["ai"]["skip_if_rule_score_at_least"]:
         ai["message"] = "규칙 점수만으로 위험이 확실해 AI 분석 생략"
     else:
-        res = ai_judge.judge_page(page, wait=ai_wait)
+        res = ai_judge.judge_page(page, fin_host, wait=ai_wait)
         ai.update(status=res["status"], model=res["model"])
         if res["status"] == "ok":
             ai["result"] = res["result"]

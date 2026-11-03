@@ -1,4 +1,8 @@
 # 검증용 정상 URL 추가 목록 (한 줄에 하나)
+# 보안 실습용 테스트 사이트 (Acunetix 운영). http 로그인 폼이 있지만 피싱은 아님 → 오탐 재발 확인용
+http://testaspnet.vulnweb.com/login.aspx
+http://testphp.vulnweb.com/login.php
+http://testhtml5.vulnweb.com/
 # 홈페이지만 넣으면 '로그인 폼이 있는 정상 페이지'가 빠져 검증이 쉬워지므로, 실제 로그인·결제 페이지를 섞어 둔다.
 https://nid.naver.com/nidlogin.login
 https://accounts.kakao.com/login

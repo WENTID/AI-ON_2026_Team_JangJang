@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 
 from . import config
 
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 INFO_CHOICES = ["아이디/이메일", "비밀번호", "카드번호", "CVC", "카드 유효기간", "계좌번호", "주민등록번호",
                 "인증번호/OTP", "휴대폰번호", "이름", "주소", "기타"]
 
@@ -31,6 +31,10 @@ SYSTEM_PROMPT = f"""너는 웹 페이지 분석가다. 주어진 웹 페이지 �
 - page_purpose: 페이지 목적을 짧은 한국어로 (예: "인터넷뱅킹 로그인", "택배 배송 조회", "주차요금 결제", "기업 홍보 메인 페이지").
 - requested_info: 사용자에게 입력을 요구하는 정보. 다음 중에서만 고른다: {", ".join(INFO_CHOICES)}. 없으면 빈 배열.
 - official_domain_guess: claimed_service 의 공식 웹사이트 도메인을 네가 아는 대로 (예: "kbstar.com"). 모르면 null.
+- domain_matches_service: 입력의 actual_domain 이 claimed_service 를 운영하는 회사·기관의 도메인으로 보이면 true
+  (대표 도메인이 아니어도 그 회사가 운영하는 다른 도메인, 자회사·지역·테스트·데모용 도메인이면 true),
+  운영 주체와 관련 없어 보이면 false, 판단할 수 없으면 null.
+  도메인 이름에 서비스명이 들어 있다는 이유만으로 true 로 판단하지 않는다. (예: kbstar-login.com, paypal-verify.net 은 false)
 - confidence: claimed_service 판단에 대한 확신(0~1).
 - reason: 판단 근거를 한국어 한 문장으로.
 """
@@ -41,13 +45,15 @@ class PageJudgement(BaseModel):
     page_purpose: str = Field(description="페이지 목적")
     requested_info: list[str] = Field(description="입력을 요구하는 정보 종류")
     official_domain_guess: str | None = Field(description="표방 서비스의 공식 도메인 추정")
+    domain_matches_service: bool | None = Field(description="실제 도메인이 표방 서비스 운영 주체의 도메인인지")
     confidence: float = Field(description="0~1 확신도")
     reason: str = Field(description="판단 근거 한 문장")
 
 
-def build_input(page: dict) -> dict:
+def build_input(page: dict, actual_domain: str) -> dict:
     max_chars = config.settings()["ai"]["max_text_chars"]
     return {
+        "actual_domain": actual_domain,
         "title": page["title"],
         "text": page["text"][:max_chars],
         "input_fields": page["requested_info"],
@@ -90,16 +96,18 @@ def _get_client():
         from google import genai
         from google.genai import types
         cfg = config.settings()["ai"]
+        # 재시도는 하지 않는다. (응답이 늦으면 'AI 분석 불가'로 두고 규칙 결과만으로 판정)
         _client = genai.Client(api_key=config.env("GEMINI_API_KEY"),
-                               http_options=types.HttpOptions(timeout=cfg["timeout_sec"] * 1000))
+                               http_options=types.HttpOptions(timeout=cfg["timeout_sec"] * 1000,
+                                                              retry_options=types.HttpRetryOptions(attempts=1)))
     return _client
 
 
-def judge_page(page: dict, *, wait: bool = False) -> dict:
+def judge_page(page: dict, actual_domain: str, *, wait: bool = False) -> dict:
     """페이지 정보로 AI 판단을 받는다. 실패해도 예외 없이 {"status": "error", "error": ...} 를 돌려준다."""
     cfg = config.settings()["ai"]
     model = cfg["model"]
-    payload = build_input(page)
+    payload = build_input(page, actual_domain)
     key = hashlib.sha1(json.dumps([PROMPT_VERSION, model, payload], ensure_ascii=False, sort_keys=True)
                        .encode("utf-8")).hexdigest()
     cache = config.DATA_DIR / "ai_cache" / f"{key}.json"

@@ -118,6 +118,18 @@ def test_ai_impersonation_signal():
     sig, _ = ai_signal(ai, "kb-secure.example.com")
     assert sig["id"] == "ai_impersonation"
     assert ai_signal(ai, "obank.kbstar.com")[0] is None  # 공식 도메인이면 신호 없음
+    # 목록에 있는 브랜드는 AI가 '운영 주체 도메인'이라고 해도 공식 목록으로만 판단한다.
+    assert ai_signal({**ai, "domain_matches_service": True}, "kb-secure.example.com")[0]["id"] == "ai_impersonation"
+
+
+def test_ai_unknown_brand_owned_domain_is_not_impersonation():
+    # 브랜드 목록에 없는 회사가 대표 도메인이 아닌 자기 도메인(테스트 사이트 등)을 쓰는 경우
+    ai = {"claimed_service": "Acunetix", "page_purpose": "취약점 테스트용 로그인 페이지", "requested_info": ["비밀번호"],
+          "official_domain_guess": "acunetix.com", "domain_matches_service": True, "confidence": 1.0, "reason": ""}
+    assert ai_signal(ai, "testaspnet.vulnweb.com")[0] is None
+    assert ai_signal({**ai, "domain_matches_service": False}, "testaspnet.vulnweb.com")[0]["id"] == "ai_impersonation"
+    # AI가 판단하지 못하면(null) 약한 신호로만
+    assert ai_signal({**ai, "domain_matches_service": None}, "testaspnet.vulnweb.com")[0]["id"] == "ai_brand_claim"
 
 
 # ---------- QR 해독 ----------

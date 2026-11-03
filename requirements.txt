@@ -1,0 +1,12 @@
+beautifulsoup4==4.15.0
+fastapi==0.162.0
+google-genai==2.34.0
+httpx==0.28.1
+numpy==2.5.4
+opencv-python-headless==5.0.0.93
+pydantic==2.14.2
+pytest==9.2.0
+python-dotenv==1.2.4
+python-multipart==0.0.33
+tldextract==5.4.0
+uvicorn==0.54.0

@@ -19,7 +19,7 @@ async function analyze(url, imageId = null) {
   stopCamera();
   setMsg("");
   show("loading-view");
-  document.querySelector("main").scrollIntoView({ behavior: "smooth" });
+  window.scrollTo({ top: 0 });
   try {
     const res = await fetch("/api/analyze", {
       method: "POST",
@@ -101,25 +101,27 @@ function pickCode(code, imageId) {
 let stream = null;
 let scanning = false;
 
-$("camera-start").addEventListener("click", startCamera);
-$("camera-stop").addEventListener("click", stopCamera);
+$("camera-start").addEventListener("click", () => startCamera());
 
 function setCameraUI(on) {
   $("camera-idle").hidden = on;
   $("camera-hint").hidden = !on;
-  $("camera-stop").hidden = !on;
   $("video").hidden = !on;
 }
 
-async function startCamera() {
+// auto: 첫 화면에서 자동으로 켜는 경우. 실패하면 조용히 '카메라 켜기' 버튼만 보여 준다.
+async function startCamera({ auto = false } = {}) {
+  if (stream) return;
   setMsg("");
   if (!navigator.mediaDevices?.getUserMedia) {
-    return setMsg("이 브라우저에서는 카메라를 쓸 수 없습니다. (https 또는 localhost 주소에서만 동작)");
+    return setMsg("이 주소에서는 카메라를 쓸 수 없습니다. (https 또는 localhost 주소에서만 동작) 아래 '다른 방법으로 검사'를 이용하세요.");
   }
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 } } });
   } catch (e) {
-    return setMsg("카메라 권한이 없거나 카메라를 찾을 수 없습니다.");
+    stream = null;
+    if (!auto) setMsg("카메라 권한이 없거나 카메라를 찾을 수 없습니다. 아래 '다른 방법으로 검사'를 이용하세요.");
+    return;
   }
   const video = $("video");
   video.srcObject = stream;
@@ -267,6 +269,16 @@ $("again").addEventListener("click", () => {
   show("input-view");
   setMsg("");
   $("url-input").value = "";
+  $("alt").open = false;
+  window.scrollTo({ top: 0 });
+  startCamera({ auto: true });
 });
 
+// 예방 수칙 목록을 설정 파일 문구로 채운다. (실패하면 HTML의 기본 문구 유지)
+fetch("/api/rules").then((r) => r.json()).then((d) => {
+  $("tips-list").innerHTML = d.principles.map((t) => `<li>${esc(t)}</li>`).join("");
+}).catch(() => {});
+
+// 첫 화면에서 바로 카메라를 켠다.
 setCameraUI(false);
+startCamera({ auto: true });

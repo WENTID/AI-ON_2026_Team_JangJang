@@ -12,7 +12,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config
+from . import config, hierarchy
 from .analyzer import analyze
 from .context import UPLOAD_DIR
 from .qr_decode import decode_image
@@ -67,6 +67,14 @@ async def api_image(file: UploadFile = File(...), decode: bool = Form(True)):
         for text in decode_image(data):
             codes.append({"text": text, "is_url": text.strip().lower().startswith(("http://", "https://"))})
     return {"image_id": image_id, "codes": codes}
+
+
+@app.get("/api/rules")
+def rules():
+    """화면의 '예방 수칙' 목록. 문구는 config/rules_hierarchy.json 에서 읽는다."""
+    ct = hierarchy.crime_type()
+    return {"crime_type": ct["name"],
+            "principles": [p["title"] for p in ct["principles"] if p["kind"] != "safe"]}
 
 
 @app.get("/api/health")

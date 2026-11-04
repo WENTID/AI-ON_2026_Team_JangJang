@@ -2,14 +2,14 @@
 
 - 확정 신호: 점수와 상관없이 '위험'
 - 강한 신호: 높은 배점
-- 약한 신호: 낮은 배점, 합계 상한(weak_cap). 약한 신호만으로는 최대 '주의'
+- 약한 신호: 낮은 배점, 합계 상한(weak_cap). 약한 신호만으로는 최대 '경고'
 - 안전 신호: 감점. 확정 신호는 상쇄하지 못함
 - 조합 규칙: 함께 나타나면 위험한 신호 조합에 추가 점수
 배점·임계값·조합 규칙은 모두 config/scoring.json 에서 읽는다.
 """
 from . import config
 
-VERDICT_LABEL = {"safe": "안전", "caution": "주의", "danger": "위험"}
+VERDICT_LABEL = {"safe": "안전", "caution": "경고", "danger": "위험"}
 
 
 def make_signal(signal_id: str, detail: str, source: str = "규칙") -> dict:
@@ -44,7 +44,7 @@ def score(signals: list[dict]) -> dict:
     else:
         verdict = "safe"
     if verdict == "danger" and not by_tier["strong"] and not by_tier["confirmed"]:
-        verdict = "caution"  # 약한 신호만으로는 최대 '주의'
+        verdict = "caution"  # 약한 신호만으로는 최대 '경고'
 
     # 영향이 큰 순서: 확정 > 강한(점수 큰 순) > 약한(점수 큰 순)
     risk = by_tier["confirmed"] + sorted(by_tier["strong"], key=lambda s: -s["points"]) \

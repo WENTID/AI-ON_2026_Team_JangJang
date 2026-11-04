@@ -168,12 +168,29 @@ def test_hierarchy_top_is_crime_type():
     assert r["crime_type"]["id"] == "phishing"
     # 위험 근거 중 영향이 가장 큰 것이 속한 수칙이 대표 수칙
     assert r["top_rule"]["id"] == "personal_info"  # brand_form_mismatch(40점)
-    groups = {g["id"]: g for g in r["groups"]}
-    assert {i["id"] for i in groups["official_address"]["items"]} >= {"new_domain", "brand_lookalike"}
-    assert {i["id"] for i in groups["personal_info"]["items"]} >= {"brand_form_mismatch", "http_sensitive_form"}
+    cats = {c["id"]: c for c in r["report"]}
+    checks = {k["id"]: k for c in r["report"] for s in c["sections"] for k in s["checks"]}
+    # 대분류: 짧은 이름, 하위 항목 중 가장 나쁜 결과
+    assert cats["official_address"]["short"] == "주소 확인"
+    assert cats["official_address"]["status"] == "danger" and cats["personal_info"]["status"] == "danger"
+    assert cats["app_install"]["status"] == "safe" and cats["qr_source"]["status"] == "phase2"
+    # 검사 항목: 걸린 신호는 위험/경고, 검사했는데 없으면 안전, 검사를 못 하면 해당 없음
+    assert checks["brand_lookalike"]["status"] == "danger"
+    assert checks["tld"]["status"] == "caution"
+    assert checks["ip_host"]["status"] == "safe"
+    assert checks["shortener"]["status"] == "na"
+    assert checks["ai_impersonation"]["status"] == "na" and checks["ai_impersonation"]["summary"] == "AI 분석 꺼짐"
+    assert checks["cert"]["status"] == "na"  # http라 해당 없음
     # http 는 신호와 주의사항이 하나로 합쳐져 한 번만 나온다
-    assert [i["id"] for i in groups["personal_info"]["items"]].count("http") == 1
-    assert groups["qr_source"]["phase2_note"]
+    assert [i["id"] for i in checks["https"]["items"]] == ["http"]
+    assert r["risk_display"]["value"] == 100 and r["score"] > 100  # 화면 표시는 100점 상한
+
+
+def test_verdict_label_caution_is_warning():
+    r = score([make_signal("new_domain", "")])
+    assert r["verdict"] == "caution"
+    from app.scoring import VERDICT_LABEL
+    assert VERDICT_LABEL["caution"] == "경고"
 
 
 def test_hierarchy_download_and_malware():
@@ -195,8 +212,10 @@ def test_hierarchy_safe_has_no_top_rule():
     snap["cert"] = {"checked": True, "valid": True, "kind": None, "error": None}
     r = analyze(snap, use_ai=False)
     assert r["verdict"] == "safe" and r["top_rule"] is None
-    safe = next(g for g in r["groups"] if g["id"] == "safe_evidence")
-    assert {i["id"] for i in safe["items"]} >= {"old_domain", "valid_cert"}
+    safe = next(c for c in r["report"] if c["id"] == "safe_evidence")
+    found = {k["id"] for s in safe["sections"] for k in s["checks"] if k["status"] == "safe"}
+    assert found >= {"old_domain", "valid_cert"}
+    assert r["risk_display"]["value"] == r["score"]
 
 
 # ---------- AI URL 캐시 (네트워크 사용 안 함) ----------

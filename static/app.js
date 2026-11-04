@@ -182,52 +182,109 @@ function sourceTag(source) {
   return `<span class="src ${cls}">${esc(source)}</span>`;
 }
 
-// 근거 한 줄. 위험(강한·확정)=빨강, 약한 신호=주황, 점수와 별개인 주의사항=회색, 안전 근거=초록
-function itemHtml(i) {
-  const cls = i.type === "notice" ? (i.severe ? "notice severe" : "notice") : i.tier;
-  const src = i.source === "규칙" ? "" : sourceTag(i.source);
-  return `<li class="${cls}">${src}${esc(i.detail)}</li>`;
+// ---------- 점검 결과 트리: 대분류(예방 수칙) > 중분류 > 검사 항목 ----------
+const STATUS_LABEL = { danger: "위험", caution: "경고", safe: "안전", na: "해당 없음", phase2: "2단계", info: "참고" };
+const CAT_ICONS = {
+  globe: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.8 2.5 15.2 0 18M12 3c-2.5 2.8-2.5 15.2 0 18"/></svg>',
+  form: '<svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
+  download: '<svg viewBox="0 0 24 24"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"/></svg>',
+  qr: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/></svg>',
+  shield: '<svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 3 8.4 7 9.5 4-1.1 7-4.9 7-9.5V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>',
+};
+let lastResult = null;
+const openCats = new Set();
+let openCheck = null;
+const isIssue = (s) => s === "danger" || s === "caution";
+const badge = (s) => `<span class="badge ${s}">${STATUS_LABEL[s]}</span>`;
+
+function checkDetail(c) {
+  if (!c.items.length) return `<div class="check-detail"><p>${esc(c.summary)}</p></div>`;
+  const rows = c.items.map((i) => {
+    const pts = i.type === "signal" && i.points
+      ? ` · ${i.tier === "safe" ? "−" : "+"}${i.points}점 (${i.tier === "safe" ? "안전 신호" : i.tier === "weak" ? "약한 신호" : i.source === "조합 규칙" ? "조합 규칙" : i.tier === "confirmed" ? "확정 신호" : "강한 신호"})`
+      : i.type === "notice" ? " · 점수와 별개인 주의사항" : "";
+    return `<li><p>${esc(i.detail)}</p><p class="muted small">출처: ${esc(i.source)}${pts}</p></li>`;
+  }).join("");
+  return `<div class="check-detail"><ul>${rows}</ul></div>`;
 }
 
-// 예방 수칙별로 묶은 근거. 근거가 없는 수칙도 '검사함'으로 보여 줘서 어떤 수칙을 확인했는지 드러낸다.
-function groupHtml(g, ctx) {
-  let body;
-  if (g.kind === "placeholder") {
-    // 출처가 불분명한 QR (2단계 맥락 일치 분석 자리)
-    body = `<div class="compare">
-        <div class="cmp"><span class="k">QR 안내문 목적</span><strong>${esc(ctx.notice_purpose || "2단계 제공 예정")}</strong></div>
-        <div class="vs">vs</div>
-        <div class="cmp"><span class="k">실제 페이지 목적</span><strong>${esc(ctx.page_purpose || "-")}</strong></div>
-      </div>${g.items.length ? `<ul class="reasons">${g.items.map(itemHtml).join("")}</ul>` : ""}
-      <p class="muted small">${esc(g.phase2_note || "")}</p>`;
-  } else if (g.items.length) {
-    body = `<ul class="reasons">${g.items.map(itemHtml).join("")}</ul>`;
-  } else {
-    body = `<p class="muted small">${g.kind === "safe" ? "해당 없음" : "의심 신호 없음"}</p>`;
-  }
-  const mark = g.kind === "placeholder" ? `<span class="pill">2단계</span>`
-    : g.kind === "risk" && g.items.length ? `<span class="pill warn">${g.items.length}건</span>` : "";
-  return `<section class="group ${g.kind}"><h3>${esc(g.title)} ${mark}</h3>${body}</section>`;
+function renderReport() {
+  const d = lastResult;
+  const only = $("only-issues").checked;
+  const cnt = { danger: 0, caution: 0, safe: 0, na: 0, phase2: 0 };
+  d.report.filter((c) => c.kind !== "safe").forEach((c) => c.sections.forEach((s) => s.checks.forEach((k) => cnt[k.status]++)));
+  const total = Object.values(cnt).reduce((a, b) => a + b, 0);
+  $("report-sum").textContent = `점검 항목 ${total}개 · 위험 ${cnt.danger} · 경고 ${cnt.caution} · 안전 ${cnt.safe}`;
+
+  let html = "";
+  d.report.forEach((c) => {
+    if (only && !c.issues) return;
+    const open = openCats.has(c.id);
+    html += `<div class="cat"><button class="cat-head" data-cat="${c.id}" aria-expanded="${open}">
+      <span class="cat-icon">${CAT_ICONS[c.icon] || ""}</span>
+      <span class="cat-name">${esc(c.short)}</span>
+      ${c.issues ? `<span class="cat-count">${c.issues}건</span>` : ""}
+      ${badge(c.status)}<span class="chev">${open ? "▴" : "▾"}</span></button>`;
+    if (open) {
+      c.sections.forEach((s) => {
+        const checks = s.checks.filter((k) => !only || isIssue(k.status));
+        if (!checks.length) return;
+        if (s.name) html += `<p class="sec-name">${esc(s.name)}</p>`;
+        checks.forEach((k) => {
+          const key = `${c.id}/${k.id}`;
+          html += `<button class="check" data-check="${key}" aria-expanded="${openCheck === key}">
+            <span class="check-name">${esc(k.name)}</span>${badge(k.status)}</button>`;
+          if (openCheck === key) html += checkDetail(k);
+        });
+      });
+    }
+    html += `</div>`;
+  });
+  $("report").innerHTML = html || `<p class="muted small">문제 항목이 없습니다.</p>`;
+  $("report").querySelectorAll("[data-cat]").forEach((b) => b.addEventListener("click", () => {
+    const id = b.dataset.cat;
+    openCats.has(id) ? openCats.delete(id) : openCats.add(id);
+    renderReport();
+  }));
+  $("report").querySelectorAll("[data-check]").forEach((b) => b.addEventListener("click", () => {
+    openCheck = openCheck === b.dataset.check ? null : b.dataset.check;
+    renderReport();
+  }));
 }
+$("only-issues").addEventListener("change", renderReport);
 
 function renderResult(d) {
-  // 첫 화면: 판정(색상) + 대표 예방 수칙 한 줄 + 행동 안내
+  // 첫 화면: 판정(색상) + 위험도(100점 만점) + 대표 예방 수칙 한 줄 + 행동 안내
   $("verdict").className = `verdict ${d.verdict}`;
   $("verdict-icon").innerHTML = ICONS[d.verdict];
   $("verdict-kind").textContent = d.headline.kind;  // 피싱 / 악성코드 구분
   $("verdict-label").textContent = d.verdict_label;
+  const rd = d.risk_display;
+  $("risk-value").textContent = rd.value;
+  $("risk-fill").style.width = `${rd.value}%`;
+  $("mark-caution").style.left = `${rd.caution}%`;
+  $("mark-danger").style.left = `${rd.danger}%`;
+  $("risk-scale").innerHTML = `<span style="width:${rd.caution}%">안전</span><span style="width:${rd.danger - rd.caution}%">경고 ${rd.caution}</span><span>위험 ${rd.danger}</span>`;
   $("rule-title").hidden = !d.top_rule;
   $("rule-title").textContent = d.top_rule ? `예방 수칙 · ${d.top_rule.title}` : "";
   $("one-liner").textContent = d.one_liner;
   $("action").textContent = d.action;
   $("more").open = false;
 
+  // 점검 결과 트리: 문제가 있는 대분류만 처음부터 펼쳐 둔다.
+  lastResult = d;
+  openCats.clear();
+  openCheck = null;
+  $("only-issues").checked = false;
+  d.report.filter((c) => c.issues).forEach((c) => openCats.add(c.id));
+  renderReport();
+
   $("r-input").textContent = d.input_url;
   $("r-final").textContent = d.final_url;
   $("r-final-row").hidden = d.final_url === d.input_url;
-
-  const ctx = { ...d.context, page_purpose: d.context.page_purpose || (d.ai.result ? d.ai.result.page_purpose : null) };
-  $("groups").innerHTML = d.groups.map((g) => groupHtml(g, ctx)).join("");
+  const c = d.context;
+  $("ctx-notice").textContent = c.notice_purpose || "2단계 제공 예정";
+  $("ctx-page").textContent = c.page_purpose || (d.ai.result ? d.ai.result.page_purpose : "-");
 
   // AI 분석
   const ai = d.ai;
@@ -252,7 +309,7 @@ function renderResult(d) {
   const b = d.breakdown;
   const ck = d.checks;
   $("detail-body").innerHTML = `<div class="kv">
-    <div><span class="k">피싱 점수</span><span class="v">${d.score}점 (주의 ${b.thresholds.caution}점 / 위험 ${b.thresholds.danger}점 이상)</span></div>
+    <div><span class="k">피싱 점수</span><span class="v">${d.score}점 (경고 ${b.thresholds.caution}점 / 위험 ${b.thresholds.danger}점 이상, 화면 위험도는 100점에서 자름)</span></div>
     <div><span class="k">점수 구성</span><span class="v">강한 신호 +${b.strong}, 약한 신호 +${b.weak} (원점수 ${b.weak_raw}, 상한 ${b.weak_cap}), 안전 신호 −${b.safe}</span></div>
     <div><span class="k">접속 결과</span><span class="v">${esc(ck.fetch)}</span></div>
     <div><span class="k">도메인 생성일</span><span class="v">${esc(ck.domain_created)}</span></div>

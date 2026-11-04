@@ -92,10 +92,10 @@ def main() -> None:
     lines = [f"# 판정 성능 검증 결과", "",
              f"- 실행: {datetime.now():%Y-%m-%d %H:%M}",
              f"- 데이터: 피싱 {labels['phishing']}개 (OpenPhish), 정상 {labels['benign']}개 (Tranco 상위 + 국내 주요 사이트·로그인 페이지)",
-             f"- 임계값: 주의 {th['caution']}점, 위험 {th['danger']}점 이상 / AI 모델: {config.settings()['ai']['model']}"
+             f"- 임계값: 경고 {th['caution']}점, 위험 {th['danger']}점 이상 / AI 모델: {config.settings()['ai']['model']}"
              + (" / **AI 제외 실행**" if args.no_ai else ""), "",
              "## 1. 설정별 성능", "",
-             "| 설정 | 피싱 탐지율 (위험) | 피싱 탐지율 (주의 이상) | 정상 오탐률 (위험) | 정상 오탐률 (주의 이상) |",
+             "| 설정 | 피싱 탐지율 (위험) | 피싱 탐지율 (경고 이상) | 정상 오탐률 (위험) | 정상 오탐률 (경고 이상) |",
              "|---|---|---|---|---|"]
     for key, (name, _) in MODES.items():
         ph = [r for r in rows[key] if r["label"] == "phishing"]
@@ -111,8 +111,8 @@ def main() -> None:
         cnt = {lab: sum(lo <= r["score"] <= hi for r in rows["B"] if r["label"] == lab) for lab in ("phishing", "benign")}
         lines.append(f"| {name} | {cnt['phishing']} | {cnt['benign']} |")
 
-    lines += ["", "## 3. 위험 임계값별 비교 (B. 규칙 + AI, 주의 임계값은 고정)", "",
-              "| 위험 임계값 | 피싱 탐지율 (위험) | 정상 오탐률 (위험) | 정상 오탐률 (주의 이상) |", "|---|---|---|---|"]
+    lines += ["", "## 3. 위험 임계값별 비교 (B. 규칙 + AI, 경고 임계값은 고정)", "",
+              "| 위험 임계값 | 피싱 탐지율 (위험) | 정상 오탐률 (위험) | 정상 오탐률 (경고 이상) |", "|---|---|---|---|"]
     for danger in (40, 50, 60, 70, 80):
         caution = min(th["caution"], danger)
         ph = [verdict_at(r, caution, danger) for r in rows["B"] if r["label"] == "phishing"]

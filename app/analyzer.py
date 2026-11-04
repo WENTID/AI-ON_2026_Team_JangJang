@@ -97,7 +97,7 @@ def headline(phishing_verdict: str, malware: bool, notice_count: int) -> dict:
         return {"kind": "피싱 위험",
                 "message": "피싱 사이트일 가능성이 높습니다. 아이디·비밀번호·금융정보를 입력하지 마세요."}
     if phishing_verdict == "caution":
-        return {"kind": "피싱 주의",
+        return {"kind": "피싱 경고",
                 "message": "피싱으로 단정할 수는 없지만 의심 신호가 있습니다. 개인정보를 입력하기 전에 주소를 다시 확인하세요."}
     message = "피싱 의심 신호가 발견되지 않았습니다."
     if notice_count:
@@ -245,8 +245,23 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
     malware = any(n.get("escalate") for n in notices)
     verdict = "danger" if malware else phishing_verdict
     risk_reasons = [r for r in final["risk_reasons"] if r["tier"] != "fact"]
+
+    # 검사 항목별 결과를 매길 때, 검사 자체를 못 한 항목은 '안전'이 아니라 '해당 없음/확인 불가'로 표시한다.
+    is_http = urlsplit(final_url).scheme == "http"
+    unavailable = {
+        "db": None if use_db and (sb["checked"] or snap["phish_feed"]["checked"]) else
+              ("DB 조회 끔" if not use_db else "DB 조회 실패"),
+        "domain_age": None if age is not None else "도메인 등록일 확인 불가",
+        "shortener": None if host_matches(in_host, settings["shorteners"]) else "단축 URL이 아님",
+        "ai": None if ai["status"] == "ok" else ai["message"] or "AI 분석 안 함",
+        "page": None if page else "페이지 내용 없음",
+        "cert": "http라 해당 없음" if is_http else (None if snap["cert"].get("checked") else "인증서 확인 불가"),
+        "whitelist": None if use_whitelist else "신뢰 목록 끔",
+        "context": context["message"],
+    }
     rules = hierarchy.build(verdict=verdict, phishing_verdict=phishing_verdict, risk_reasons=risk_reasons,
-                            safe_reasons=final["safe_reasons"], notices=notices)
+                            safe_reasons=final["safe_reasons"], notices=notices, unavailable=unavailable)
+    th = final["breakdown"]["thresholds"]
 
     return {
         "input_url": input_url,
@@ -258,13 +273,16 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
         "phishing_verdict_label": VERDICT_LABEL[phishing_verdict],
         "headline": headline(phishing_verdict, malware, len(notices)),
         "score": final["score"],
+        # 화면 표시용 위험도: 100점 만점으로 자른다. (판정은 원점수 score 로 이미 끝났으므로 영향 없음)
+        "risk_display": {"value": min(final["score"], 100), "max": 100,
+                         "caution": th["caution"], "danger": th["danger"]},
         "breakdown": final["breakdown"],
-        # 판정 위계: 범죄유형, 대표 예방 수칙 한 줄, 행동 안내, 수칙별로 묶은 근거
+        # 판정 위계: 범죄유형, 대표 예방 수칙 한 줄, 행동 안내, 대분류>중분류>검사 항목 트리 리포트
         "crime_type": rules["crime_type"],
         "top_rule": rules["top_rule"],
         "one_liner": rules["one_liner"],
         "action": rules["action"],
-        "groups": rules["groups"],
+        "report": rules["report"],
         "risk_reasons": risk_reasons,
         "safe_reasons": final["safe_reasons"],
         "notices": notices,

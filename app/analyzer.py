@@ -106,7 +106,8 @@ def headline(phishing_verdict: str, malware: bool, notice_count: int) -> dict:
 
 
 def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whitelist: bool = True,
-            ai_wait: bool = False, context_image_id: str | None = None) -> dict:
+            ai_wait: bool = False, ai_url_cache: bool = False, context_image_id: str | None = None) -> dict:
+    """ai_url_cache: 실시간 분석에서 같은 URL의 AI 결과를 재사용 (검증 스크립트는 끔: 저장본 내용 기준 캐시만 사용)"""
     settings = config.settings()
     spec = config.scoring()["signals"]
     trace = snap["trace"]
@@ -221,7 +222,7 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
     elif pre["score"] >= settings["ai"]["skip_if_rule_score_at_least"]:
         ai["message"] = "규칙 점수만으로 위험이 확실해 AI 분석 생략"
     else:
-        res = ai_judge.judge_page(page, fin_host, wait=ai_wait)
+        res = ai_judge.judge_page(page, fin_host, wait=ai_wait, url=final_url if ai_url_cache else None)
         ai.update(status=res["status"], model=res["model"])
         if res["status"] == "ok":
             ai["result"] = res["result"]

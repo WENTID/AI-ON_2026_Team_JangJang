@@ -44,7 +44,7 @@ def api_analyze(req: AnalyzeRequest):
     except InvalidUrl as e:
         raise HTTPException(400, str(e))
     snap = collect(url)
-    return analyze(snap, context_image_id=req.image_id)
+    return analyze(snap, context_image_id=req.image_id, ai_url_cache=True)
 
 
 @app.post("/api/image")

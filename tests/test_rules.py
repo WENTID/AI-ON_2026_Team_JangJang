@@ -197,3 +197,24 @@ def test_hierarchy_safe_has_no_top_rule():
     assert r["verdict"] == "safe" and r["top_rule"] is None
     safe = next(g for g in r["groups"] if g["id"] == "safe_evidence")
     assert {i["id"] for i in safe["items"]} >= {"old_domain", "valid_cert"}
+
+
+# ---------- AI URL 캐시 (네트워크 사용 안 함) ----------
+def test_ai_url_cache_returns_same_result(tmp_path, monkeypatch):
+    import json
+    import time
+    from app import ai_judge, config
+    monkeypatch.setattr(config, "DATA_DIR", tmp_path)
+    model = config.settings()["ai"]["model"]
+    result = {"claimed_service": None, "page_purpose": "테스트", "requested_info": [], "official_domain_guess": None,
+              "domain_matches_service": None, "confidence": 0.1, "reason": ""}
+    ai_judge._write_url_cache("https://example.net/a", model, result)
+    # 페이지 내용이 달라도 같은 URL이면 저장된 결과를 그대로 쓴다 (API 호출 없음)
+    r = ai_judge.judge_page({"title": "바뀐 내용"}, "example.net", url="https://example.net/a")
+    assert r["status"] == "ok" and r["cached"] and r["result"] == result
+    # 유효 시간이 지나면 쓰지 않는다
+    path = ai_judge._url_cache_path("https://example.net/a", model)
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    saved["saved_at"] = time.time() - 10 * 24 * 3600
+    path.write_text(json.dumps(saved), encoding="utf-8")
+    assert ai_judge._read_url_cache("https://example.net/a", model) is None

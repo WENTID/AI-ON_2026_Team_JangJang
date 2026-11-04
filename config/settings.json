@@ -29,7 +29,9 @@
     "max_requests_per_minute": 10,
     "max_text_chars": 3000,
     "min_confidence": 0.6,
-    "skip_if_rule_score_at_least": 90
+    "skip_if_rule_score_at_least": 90,
+    "seed": 0,
+    "url_cache_hours": 24
   },
   "screenshot": {
     "enabled": false

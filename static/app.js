@@ -180,40 +180,52 @@ function sourceTag(source) {
   return `<span class="src ${cls}">${esc(source)}</span>`;
 }
 
-function reasonItem(r) {
-  return `<li class="${r.tier}">${sourceTag(r.source)}${esc(r.detail)}</li>`;
+// 근거 한 줄. 위험(강한·확정)=빨강, 약한 신호=주황, 점수와 별개인 주의사항=회색, 안전 근거=초록
+function itemHtml(i) {
+  const cls = i.type === "notice" ? (i.severe ? "notice severe" : "notice") : i.tier;
+  const src = i.source === "규칙" ? "" : sourceTag(i.source);
+  return `<li class="${cls}">${src}${esc(i.detail)}</li>`;
+}
+
+// 예방 수칙별로 묶은 근거. 근거가 없는 수칙도 '검사함'으로 보여 줘서 어떤 수칙을 확인했는지 드러낸다.
+function groupHtml(g, ctx) {
+  let body;
+  if (g.kind === "placeholder") {
+    // 출처가 불분명한 QR (2단계 맥락 일치 분석 자리)
+    body = `<div class="compare">
+        <div class="cmp"><span class="k">QR 안내문 목적</span><strong>${esc(ctx.notice_purpose || "2단계 제공 예정")}</strong></div>
+        <div class="vs">vs</div>
+        <div class="cmp"><span class="k">실제 페이지 목적</span><strong>${esc(ctx.page_purpose || "-")}</strong></div>
+      </div>${g.items.length ? `<ul class="reasons">${g.items.map(itemHtml).join("")}</ul>` : ""}
+      <p class="muted small">${esc(g.phase2_note || "")}</p>`;
+  } else if (g.items.length) {
+    body = `<ul class="reasons">${g.items.map(itemHtml).join("")}</ul>`;
+  } else {
+    body = `<p class="muted small">${g.kind === "safe" ? "해당 없음" : "의심 신호 없음"}</p>`;
+  }
+  const mark = g.kind === "placeholder" ? `<span class="pill">2단계</span>`
+    : g.kind === "risk" && g.items.length ? `<span class="pill warn">${g.items.length}건</span>` : "";
+  return `<section class="group ${g.kind}"><h3>${esc(g.title)} ${mark}</h3>${body}</section>`;
 }
 
 function renderResult(d) {
-  // 맨 위: 종합 판정. 피싱 판정과 기타 위협은 문구·태그로 구분해 보여 준다.
+  // 첫 화면: 판정(색상) + 대표 예방 수칙 한 줄 + 행동 안내
   $("verdict").className = `verdict ${d.verdict}`;
   $("verdict-icon").innerHTML = ICONS[d.verdict];
-  $("verdict-kind").textContent = d.headline.kind;
+  $("verdict-kind").textContent = d.headline.kind;  // 피싱 / 악성코드 구분
   $("verdict-label").textContent = d.verdict_label;
-  $("verdict-desc").textContent = d.headline.message;
-  $("tag-phishing").textContent = `피싱 판정: ${d.phishing_verdict_label}`;
-  const n = d.notices.length;
-  $("tag-notice").hidden = n === 0;
-  $("tag-notice").textContent = `기타 위협·주의사항 ${n}건`;
+  $("rule-title").hidden = !d.top_rule;
+  $("rule-title").textContent = d.top_rule ? `예방 수칙 · ${d.top_rule.title}` : "";
+  $("one-liner").textContent = d.one_liner;
+  $("action").textContent = d.action;
+  $("more").open = false;
 
   $("r-input").textContent = d.input_url;
   $("r-final").textContent = d.final_url;
   $("r-final-row").hidden = d.final_url === d.input_url;
 
-  // 피싱 판정 근거: 핵심 3개는 바로, 나머지는 펼쳐보기
-  const risks = d.risk_reasons;
-  $("risk-top").innerHTML = risks.slice(0, 3).map(reasonItem).join("");
-  $("risk-more").innerHTML = risks.slice(3).map(reasonItem).join("");
-  $("risk-more-wrap").hidden = risks.length <= 3;
-  $("risk-empty").hidden = risks.length > 0;
-  $("safe-title").hidden = d.safe_reasons.length === 0;
-  $("safe-list").innerHTML = d.safe_reasons.map((r) => `<li>${sourceTag(r.source)}${esc(r.detail)}</li>`).join("");
-
-  // 기타 위협·주의사항: 없으면 섹션 숨김
-  $("notice-card").hidden = n === 0;
-  $("notice-list").innerHTML = d.notices
-    .map((x) => `<li class="${x.escalate ? "severe" : ""}">${x.escalate ? sourceTag("DB") : ""}${esc(x.detail)}</li>`)
-    .join("");
+  const ctx = { ...d.context, page_purpose: d.context.page_purpose || (d.ai.result ? d.ai.result.page_purpose : null) };
+  $("groups").innerHTML = d.groups.map((g) => groupHtml(g, ctx)).join("");
 
   // AI 분석
   const ai = d.ai;
@@ -234,13 +246,7 @@ function renderResult(d) {
   if (d.screenshot) html += `<img class="thumb" src="${esc(d.screenshot)}" alt="접속 페이지 미리보기">`;
   $("ai-body").innerHTML = html;
 
-  // 맥락 비교 (2단계)
-  const c = d.context;
-  $("ctx-notice").textContent = c.notice_purpose || (c.status === "phase2" ? "2단계 제공 예정" : "맥락 정보 없음");
-  $("ctx-page").textContent = c.page_purpose || (ai.result ? ai.result.page_purpose : "-");
-  $("ctx-msg").textContent = c.message;
-
-  // 상세 정보 (점수는 여기서만 표시)
+  // 점수·검사 정보 (점수는 상세보기에서만 표시)
   const b = d.breakdown;
   const ck = d.checks;
   $("detail-body").innerHTML = `<div class="kv">

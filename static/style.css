@@ -87,18 +87,31 @@ main { max-width: 1040px; margin: -88px auto 0; padding: 0 16px 40px; position: 
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ---------- 결과 ---------- */
-.verdict { display: flex; gap: 18px; align-items: flex-start; border-radius: var(--radius); padding: 22px; margin-bottom: 14px; }
+.verdict { border-radius: var(--radius); padding: 22px; margin-bottom: 14px; }
 .verdict.safe { background: var(--safe-bg); --c: var(--safe); }
 .verdict.caution { background: var(--caution-bg); --c: var(--caution); }
 .verdict.danger { background: var(--danger-bg); --c: var(--danger); }
+.verdict p { margin: 0; }
+.verdict-head { display: flex; gap: 16px; align-items: center; }
 .verdict-icon { flex: none; width: 60px; height: 60px; border-radius: 18px; background: var(--c); color: #fff; display: grid; place-items: center; }
 .verdict-icon svg { width: 34px; height: 34px; }
-.verdict-text p { margin: 0; }
 .verdict-kind { color: var(--c); font-weight: 700; font-size: .9rem; }
 .verdict-label { font-size: 2.2rem; font-weight: 900; line-height: 1.2; color: var(--c); }
-.verdict-desc { margin-top: 4px !important; }
-.verdict-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.tag { font-size: .8rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--line); }
+.rule-title { margin-top: 16px !important; font-size: .82rem; font-weight: 700; color: var(--c); }
+.one-liner { margin-top: 4px !important; font-size: 1.08rem; font-weight: 700; }
+#rule-title[hidden] + .one-liner { margin-top: 16px !important; }
+.action { margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: #fff; border: 1px solid rgba(0,0,0,.06); }
+.action-k { display: block; font-size: .78rem; font-weight: 700; color: var(--muted); margin-bottom: 2px; }
+
+.more { margin-bottom: 12px; }
+.more > summary { list-style: none; text-align: center; padding: 12px; border-radius: 14px; border: 1px solid var(--line); color: var(--text); font-weight: 700; margin: 0 0 12px; }
+.more > summary::after { content: " ▾"; }
+.more[open] > summary::after { content: " ▴"; }
+.group { padding: 10px 0; border-top: 1px dashed var(--line); }
+.group:first-child { border-top: 0; padding-top: 0; }
+.group h3 { margin: 0 0 8px !important; display: flex; align-items: center; gap: 6px; }
+.group.safe .reasons li { border-left-color: var(--safe); }
+.pill.warn { background: var(--danger-bg); color: var(--danger); }
 
 .block { border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; margin-bottom: 12px; }
 .block h2 { font-size: 1.02rem; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
@@ -111,9 +124,9 @@ main { max-width: 1040px; margin: -88px auto 0; padding: 0 16px 40px; position: 
 .reasons { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
 .reasons li { padding: 9px 12px; border-radius: 10px; background: #f7f8fb; border-left: 4px solid var(--danger); }
 .reasons li.weak { border-left-color: var(--caution); }
-.reasons.safe li { border-left-color: var(--safe); }
-.reasons.notice li { border-left-color: #8a94a8; }
-.reasons.notice li.severe { border-left-color: var(--danger); background: var(--danger-bg); }
+.reasons li.safe { border-left-color: var(--safe); }
+.reasons li.notice { border-left-color: #8a94a8; }
+.reasons li.notice.severe { border-left-color: var(--danger); background: var(--danger-bg); }
 .src { display: inline-block; font-size: .72rem; font-weight: 700; padding: 0 7px; border-radius: 5px; background: #e6e9f0; color: #3d4659; margin-right: 6px; vertical-align: 1px; }
 .src.ai { background: #ece7ff; color: #5b34d6; }
 .src.db { background: #fde0de; color: #b42318; }
@@ -154,7 +167,6 @@ details summary { cursor: pointer; color: var(--primary); margin: 8px 0 4px; fon
   .drop { min-height: 200px; }
   .camera { min-height: 340px; order: -1; }  /* 휴대폰에서는 카메라를 먼저 */
   .panel { padding: 14px; border-radius: 22px; }
-  .verdict { flex-direction: column; gap: 10px; }
   .compare { grid-template-columns: 1fr; }
   .vs { justify-self: center; }
   .k { flex-basis: 90px; }

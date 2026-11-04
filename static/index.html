@@ -88,57 +88,39 @@
 
   <!-- 결과 -->
   <section class="panel" id="result-view" hidden>
+    <!-- 첫 화면: 판정 + 예방 수칙 한 줄 + 행동 안내 -->
     <div id="verdict" class="verdict">
-      <div class="verdict-icon" id="verdict-icon"></div>
-      <div class="verdict-text">
-        <p class="verdict-kind" id="verdict-kind"></p>
-        <p class="verdict-label" id="verdict-label"></p>
-        <p class="verdict-desc" id="verdict-desc"></p>
-        <div class="verdict-tags">
-          <span class="tag" id="tag-phishing"></span>
-          <span class="tag" id="tag-notice" hidden></span>
+      <div class="verdict-head">
+        <div class="verdict-icon" id="verdict-icon"></div>
+        <div>
+          <p class="verdict-kind" id="verdict-kind"></p>
+          <p class="verdict-label" id="verdict-label"></p>
         </div>
       </div>
+      <p class="rule-title" id="rule-title" hidden></p>
+      <p class="one-liner" id="one-liner"></p>
+      <div class="action"><span class="action-k">이렇게 하세요</span><p id="action"></p></div>
     </div>
 
-    <div class="block urls">
-      <div><span class="k">검사한 주소</span><span class="v mono" id="r-input"></span></div>
-      <div id="r-final-row"><span class="k">최종 도착 주소</span><span class="v mono" id="r-final"></span></div>
-    </div>
-
-    <div class="block">
-      <h2>피싱 판정 근거</h2>
-      <ul class="reasons" id="risk-top"></ul>
-      <details id="risk-more-wrap" hidden><summary>근거 더 보기</summary><ul class="reasons" id="risk-more"></ul></details>
-      <p class="muted small" id="risk-empty" hidden>피싱 의심 신호가 발견되지 않았습니다.</p>
-      <h3 id="safe-title" hidden>안전 근거</h3>
-      <ul class="reasons safe" id="safe-list"></ul>
-    </div>
-
-    <div class="block" id="notice-card" hidden>
-      <h2>기타 위협·주의사항</h2>
-      <p class="muted small">피싱 판정과 별개로 확인이 필요한 점</p>
-      <ul class="reasons notice" id="notice-list"></ul>
-    </div>
-
-    <div class="block">
-      <h2>AI 페이지 분석</h2>
-      <div id="ai-body"></div>
-    </div>
-
-    <div class="block">
-      <h2>안내문 맥락 비교 <span class="pill">2단계</span></h2>
-      <div class="compare">
-        <div class="cmp"><span class="k">QR 안내문 목적</span><strong id="ctx-notice"></strong></div>
-        <div class="vs">vs</div>
-        <div class="cmp"><span class="k">실제 페이지 목적</span><strong id="ctx-page"></strong></div>
+    <!-- 상세보기: 예방 수칙별 근거, 주소, AI 분석, 점수 -->
+    <details class="more" id="more">
+      <summary>자세히 보기</summary>
+      <div class="block urls">
+        <div><span class="k">검사한 주소</span><span class="v mono" id="r-input"></span></div>
+        <div id="r-final-row"><span class="k">최종 도착 주소</span><span class="v mono" id="r-final"></span></div>
       </div>
-      <p class="muted small" id="ctx-msg"></p>
-    </div>
-
-    <details class="block details">
-      <summary>상세 정보</summary>
-      <div id="detail-body"></div>
+      <div class="block">
+        <h2>예방 수칙별 검사 결과</h2>
+        <div id="groups"></div>
+      </div>
+      <div class="block">
+        <h2>AI 페이지 분석</h2>
+        <div id="ai-body"></div>
+      </div>
+      <div class="block">
+        <h2>점수·검사 정보</h2>
+        <div id="detail-body"></div>
+      </div>
     </details>
 
     <button id="again" class="btn primary wide">다른 QR 검사하기</button>

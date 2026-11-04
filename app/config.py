@@ -40,6 +40,11 @@ def scoring() -> dict:
 
 
 @lru_cache
+def hierarchy() -> dict:
+    return _load_json("rules_hierarchy.json")
+
+
+@lru_cache
 def brands() -> list[dict]:
     return _load_json("brands.json")["brands"]
 

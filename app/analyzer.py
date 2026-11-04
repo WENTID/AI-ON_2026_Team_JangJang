@@ -5,7 +5,7 @@
 """
 from urllib.parse import parse_qsl, urlsplit
 
-from . import ai_judge, config
+from . import ai_judge, config, hierarchy
 from .brand import brands_in_text, find_brand, find_lookalike, official_brand
 from .context import analyze_context
 from .lookups import age_days
@@ -117,7 +117,11 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
     signals: list[dict] = []
     notices: list[dict] = []
 
-    # ---- 피싱·악성코드 DB ----
+    # 검사 순서는 판정 위계(config/rules_hierarchy.json)의 예방 수칙 순서를 따른다.
+    # 단, AI 사칭 판별은 규칙 점수로 호출 여부를 정하므로 규칙 검사가 모두 끝난 뒤에 한다.
+
+    # ======== 수칙 1. 접속 주소가 공식 주소인지 확인 ========
+    # ---- 피싱 DB ----
     sb = snap["safe_browsing"]
     if use_db:
         sources = []
@@ -127,9 +131,6 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
             sources.append("OpenPhish")
         if sources:
             signals.append(make_signal("phishing_db", f"{', '.join(sources)} 피싱 목록에 등록된 주소", source="DB"))
-        if any(m["threat_type"] != "SOCIAL_ENGINEERING" for m in sb["matches"]):
-            notices.append({"id": "malware_db", "escalate": True,
-                            "detail": "악성·원치 않는 소프트웨어 배포 사이트로 등록됨 (Google Safe Browsing)"})
 
     # ---- URL 구조 ----
     seen = set()
@@ -169,7 +170,8 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
                 signals.append(make_signal("brand_lookalike", hit["how"]))
                 break
 
-    # ---- 연결 보안 ----
+    # ======== 수칙 2. 개인정보·금융정보 입력 요구 주의 ========
+    # ---- 연결 보안 (단독으로 판정을 바꾸지 않음) ----
     if urlsplit(final_url).scheme == "http":
         signals.append(make_signal("http", "암호화되지 않은 연결(http)"))
         notices.append({"id": "http", "detail": "암호화되지 않은 연결(http)이라 입력한 정보가 노출될 수 있음"})
@@ -180,14 +182,7 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
         elif cert.get("checked"):
             notices.append({"id": "cert_error", "detail": CERT_PROBLEM.get(cert.get("kind"), "인증서 오류")})
 
-    # ---- 실행 파일 다운로드 ----
-    if trace["is_download"]:
-        path = urlsplit(final_url).path
-        ext = path.rsplit(".", 1)[-1].lower() if "." in path.rsplit("/", 1)[-1] else ""
-        name = "앱 설치 파일(.apk)" if ext in ("apk", "xapk") else (f"실행 파일(.{ext})" if ext else "파일")
-        notices.append({"id": "download", "detail": f"{name} 다운로드로 연결됨"})
-
-    # ---- 페이지 내용 ----
+    # ---- 페이지 내용 (입력 폼) ----
     if page and page["sensitive_info"]:
         kinds = ", ".join(page["sensitive_info"])
         signals.append(make_signal("sensitive_form", f"{kinds} 입력란이 있음"))
@@ -202,7 +197,17 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
         signals.append(make_signal("form_posts_elsewhere",
                                    f"입력한 정보가 다른 도메인({', '.join(page['external_form_domains'][:2])})으로 전송됨"))
 
-    # ---- AI 사칭 판별 (규칙만으로 애매할 때만) ----
+    # ======== 수칙 3. 앱 설치·파일 다운로드 유도 주의 (점수와 별개인 주의사항) ========
+    if trace["is_download"]:
+        path = urlsplit(final_url).path
+        ext = path.rsplit(".", 1)[-1].lower() if "." in path.rsplit("/", 1)[-1] else ""
+        name = "앱 설치 파일(.apk)" if ext in ("apk", "xapk") else (f"실행 파일(.{ext})" if ext else "파일")
+        notices.append({"id": "download", "detail": f"{name} 다운로드로 연결됨"})
+    if use_db and any(m["threat_type"] != "SOCIAL_ENGINEERING" for m in sb["matches"]):
+        notices.append({"id": "malware_db", "escalate": True,
+                        "detail": "악성·원치 않는 소프트웨어 배포 사이트로 등록됨 (Google Safe Browsing)"})
+
+    # ======== 수칙 1 (계속). AI 사칭 판별 (규칙만으로 애매할 때만) ========
     pre = score(signals)
     ai = {"status": "skipped", "message": "", "result": None, "model": None}
     if not use_ai or not settings["ai"]["enabled"]:
@@ -226,7 +231,7 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
         else:
             ai["message"] = res["error"]
 
-    # ---- QR 안내문 맥락 (2단계) ----
+    # ======== 수칙 4. 출처가 불분명한 QR 주의 — QR 안내문 맥락 (2단계) ========
     context = analyze_context(context_image_id, ai["result"]["page_purpose"] if ai["result"] else None)
     if context["signal"]:
         signals.append(context["signal"])
@@ -238,6 +243,9 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
     phishing_verdict = final["verdict"]
     malware = any(n.get("escalate") for n in notices)
     verdict = "danger" if malware else phishing_verdict
+    risk_reasons = [r for r in final["risk_reasons"] if r["tier"] != "fact"]
+    rules = hierarchy.build(verdict=verdict, phishing_verdict=phishing_verdict, risk_reasons=risk_reasons,
+                            safe_reasons=final["safe_reasons"], notices=notices)
 
     return {
         "input_url": input_url,
@@ -250,7 +258,13 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
         "headline": headline(phishing_verdict, malware, len(notices)),
         "score": final["score"],
         "breakdown": final["breakdown"],
-        "risk_reasons": [r for r in final["risk_reasons"] if r["tier"] != "fact"],
+        # 판정 위계: 범죄유형, 대표 예방 수칙 한 줄, 행동 안내, 수칙별로 묶은 근거
+        "crime_type": rules["crime_type"],
+        "top_rule": rules["top_rule"],
+        "one_liner": rules["one_liner"],
+        "action": rules["action"],
+        "groups": rules["groups"],
+        "risk_reasons": risk_reasons,
         "safe_reasons": final["safe_reasons"],
         "notices": notices,
         "ai": ai,

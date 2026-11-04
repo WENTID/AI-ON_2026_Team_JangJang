@@ -1,0 +1,88 @@
+{
+  "_설명": [
+    "판정 위계 설정. 범죄유형 > 예방 수칙(대분류) > 점수 신호(소분류, config/scoring.json 의 신호 id).",
+    "점수 계산은 scoring.json 그대로이고, 이 파일은 근거를 어떤 수칙 아래에 묶어 보여 줄지와 화면 문구만 정한다.",
+    "title / one_liner / actions 문구는 초안이다. 팀이 공식 예방 수칙 출처로 확정하면 이 파일만 고치면 된다.",
+    "kind: risk(위험 근거를 묶는 수칙) / safe(안전 근거) / placeholder(아직 검사가 없는 자리, 2단계).",
+    "signals: scoring.json 의 신호·조합 규칙 id. notices: 점수와 별개인 기타 주의사항 id (analyzer.py).",
+    "actions: 이 수칙이 대표 수칙으로 뽑혔을 때 판정별 행동 안내. 없으면 범죄유형의 default_actions 를 쓴다.",
+    "2단계에서 QR 분석기로 넓힐 때는 crime_types 에 범죄유형(예: 악성 앱 설치 유도, 결제 사기)을 추가한다."
+  ],
+  "crime_types": [
+    {
+      "id": "phishing",
+      "name": "피싱",
+      "default_actions": {
+        "danger": "접속하지 말고, 해당 기관의 공식 앱이나 직접 입력한 주소로 확인하세요.",
+        "caution": "개인정보를 입력하기 전에 공식 앱이나 직접 입력한 주소로 한 번 더 확인하세요.",
+        "safe": "피싱 의심 신호는 없지만, 개인정보 입력은 항상 신중하게 하세요."
+      },
+      "safe_one_liner": "검사한 예방 수칙에서 피싱 의심 신호가 발견되지 않았습니다.",
+      "principles": [
+        {
+          "id": "official_address",
+          "kind": "risk",
+          "title": "접속 주소가 공식 주소인지 확인",
+          "one_liner": "접속하려는 주소가 공식 사이트 주소가 아닐 가능성이 있습니다.",
+          "actions": {
+            "danger": "접속하지 말고, 해당 기관의 공식 앱이나 직접 입력한 주소로 확인하세요.",
+            "caution": "주소를 공식 사이트 주소와 한 글자씩 비교해 보고, 확실하지 않으면 공식 앱으로 확인하세요."
+          },
+          "signals": [
+            "phishing_db",
+            "brand_lookalike", "new_domain", "ip_host", "shortener_cross_domain", "ai_impersonation",
+            "new_domain_brand", "shortener_new_domain",
+            "ai_brand_claim", "hosting_platform", "long_url", "many_subdomains", "encoded_chars", "at_symbol",
+            "many_params", "punycode", "suspicious_tld"
+          ],
+          "notices": []
+        },
+        {
+          "id": "personal_info",
+          "kind": "risk",
+          "title": "개인정보·금융정보 입력 요구 주의",
+          "one_liner": "공식 사이트가 아닌 곳에서 개인정보·금융정보를 입력받고 있습니다.",
+          "actions": {
+            "danger": "아이디·비밀번호·카드번호·인증번호를 절대 입력하지 마세요.",
+            "caution": "정보를 입력하기 전에 공식 앱이나 직접 입력한 주소로 같은 화면이 나오는지 확인하세요."
+          },
+          "signals": ["brand_form_mismatch", "http_sensitive_form", "form_posts_elsewhere", "http", "sensitive_form"],
+          "notices": ["http", "cert_error"]
+        },
+        {
+          "id": "app_install",
+          "kind": "risk",
+          "title": "앱 설치·파일 다운로드 유도 주의",
+          "one_liner": "QR이 앱 설치 파일이나 악성코드 배포 사이트로 연결됩니다.",
+          "actions": {
+            "danger": "접속하지 말고, 파일을 받거나 설치하지 마세요.",
+            "caution": "파일을 받거나 설치하지 마세요. 앱은 공식 앱 마켓에서만 설치하세요.",
+            "safe": "파일을 받거나 설치하지 마세요. 앱은 공식 앱 마켓에서만 설치하세요."
+          },
+          "signals": [],
+          "notices": ["download", "malware_db"]
+        },
+        {
+          "id": "qr_source",
+          "kind": "placeholder",
+          "title": "출처가 불분명한 QR 주의 (덧붙인 스티커 등)",
+          "one_liner": "QR 안내문의 목적과 실제 페이지의 목적이 다릅니다.",
+          "phase2_note": "QR 안내문과 실제 페이지 목적 비교는 2단계에서 제공 예정",
+          "actions": {
+            "danger": "QR이 덧붙여진 스티커인지 확인하고, 안내문에 적힌 기관에 직접 문의하세요.",
+            "caution": "QR이 덧붙여진 스티커인지 확인하고, 안내문에 적힌 기관에 직접 문의하세요."
+          },
+          "signals": ["ai_context_mismatch"],
+          "notices": []
+        },
+        {
+          "id": "safe_evidence",
+          "kind": "safe",
+          "title": "안전 근거",
+          "signals": ["trusted_site", "old_domain", "valid_cert"],
+          "notices": []
+        }
+      ]
+    }
+  ]
+}

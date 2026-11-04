@@ -153,3 +153,47 @@ def test_qr_decode_roundtrip():
     qr = cv2.copyMakeBorder(qr, 40, 40, 40, 40, cv2.BORDER_CONSTANT, value=255)
     ok, png = cv2.imencode(".png", qr)
     assert decode_image(png.tobytes()) == ["https://example.com/pay"]
+
+
+# ---------- 판정 위계 (config/rules_hierarchy.json) ----------
+from app import hierarchy  # noqa: E402
+
+
+def test_every_signal_is_mapped_to_one_principle():
+    assert hierarchy.mapping_problems() == []
+
+
+def test_hierarchy_top_is_crime_type():
+    r = analyze(fake_snapshot("http://kbstar-login.xyz/", LOGIN_HTML), use_ai=False)
+    assert r["crime_type"]["id"] == "phishing"
+    # 위험 근거 중 영향이 가장 큰 것이 속한 수칙이 대표 수칙
+    assert r["top_rule"]["id"] == "personal_info"  # brand_form_mismatch(40점)
+    groups = {g["id"]: g for g in r["groups"]}
+    assert {i["id"] for i in groups["official_address"]["items"]} >= {"new_domain", "brand_lookalike"}
+    assert {i["id"] for i in groups["personal_info"]["items"]} >= {"brand_form_mismatch", "http_sensitive_form"}
+    # http 는 신호와 주의사항이 하나로 합쳐져 한 번만 나온다
+    assert [i["id"] for i in groups["personal_info"]["items"]].count("http") == 1
+    assert groups["qr_source"]["phase2_note"]
+
+
+def test_hierarchy_download_and_malware():
+    snap = fake_snapshot("https://files.example.org/app.apk", "", created="2010-01-01T00:00:00Z")
+    snap["trace"]["is_download"] = True
+    snap["cert"] = {"checked": True, "valid": True, "kind": None, "error": None}
+    r = analyze(snap, use_ai=False)
+    assert r["verdict"] == "safe" and r["top_rule"]["id"] == "app_install"
+    assert "설치" in r["action"]
+
+    snap = fake_snapshot("https://example.org/", "<title>hi</title>", created="2010-01-01T00:00:00Z")
+    snap["safe_browsing"]["matches"] = [{"url": "https://example.org/", "threat_type": "MALWARE"}]
+    r = analyze(snap, use_ai=False)
+    assert r["top_rule"]["id"] == "app_install"
+
+
+def test_hierarchy_safe_has_no_top_rule():
+    snap = fake_snapshot("https://example.org/", "<title>hi</title>", created="2010-01-01T00:00:00Z")
+    snap["cert"] = {"checked": True, "valid": True, "kind": None, "error": None}
+    r = analyze(snap, use_ai=False)
+    assert r["verdict"] == "safe" and r["top_rule"] is None
+    safe = next(g for g in r["groups"] if g["id"] == "safe_evidence")
+    assert {i["id"] for i in safe["items"]} >= {"old_domain", "valid_cert"}

@@ -18,9 +18,9 @@
       "default_actions": {
         "danger": "접속하지 말고, 해당 기관의 공식 앱이나 직접 입력한 주소로 확인하세요.",
         "caution": "개인정보를 입력하기 전에 공식 앱이나 직접 입력한 주소로 한 번 더 확인하세요.",
-        "safe": "피싱 의심 신호는 없지만, 개인정보 입력은 항상 신중하게 하세요."
+        "safe": "피싱 의심 정황은 없지만, 개인정보 입력은 항상 신중하게 하세요."
       },
-      "safe_one_liner": "검사한 예방 수칙에서 피싱 의심 신호가 발견되지 않았습니다.",
+      "safe_one_liner": "검사한 예방 수칙에서 피싱 의심 정황이 발견되지 않았습니다.",
       "principles": [
         {
           "id": "official_address",
@@ -121,15 +121,15 @@
           "icon": "qr",
           "title": "출처가 불분명한 QR 주의 (덧붙인 스티커 등)",
           "one_liner": "QR 안내문의 목적과 실제 페이지의 목적이 다릅니다.",
-          "phase2_note": "QR 안내문과 실제 페이지 목적 비교는 2단계에서 제공 예정",
+          "phase2_note": "QR 표시 목적과 실제 페이지 목적 비교 기능은 2단계에서 제공 예정",
           "actions": {
             "danger": "QR이 덧붙여진 스티커인지 확인하고, 안내문에 적힌 기관에 직접 문의하세요.",
             "caution": "QR이 덧붙여진 스티커인지 확인하고, 안내문에 적힌 기관에 직접 문의하세요."
           },
           "sections": [
-            {"name": "안내문 맥락", "checks": [
-              {"id": "context", "name": "안내문 vs 실제 페이지 목적", "signals": ["ai_context_mismatch"],
-               "requires": "context", "ok": "안내문과 페이지 목적이 일치함"}
+            {"name": "목적 비교", "checks": [
+              {"id": "context", "name": "QR 표시 목적과 페이지 목적 일치 여부", "signals": ["ai_context_mismatch"],
+               "requires": "context", "ok": "QR 표시 목적과 페이지 목적 일치"}
             ]}
           ]
         },

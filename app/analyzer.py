@@ -91,15 +91,15 @@ def headline(phishing_verdict: str, malware: bool, notice_count: int) -> dict:
                 "message": "피싱 사이트일 가능성이 높고, 악성·원치 않는 소프트웨어 배포 사이트로도 등록되어 있습니다. 접속하지 마세요."}
     if malware:
         return {"kind": "악성코드 위험",
-                "message": "피싱 신호는 뚜렷하지 않지만, 악성·원치 않는 소프트웨어를 퍼뜨리는 사이트로 등록되어 있습니다. "
+                "message": "피싱 정황은 뚜렷하지 않지만, 악성·원치 않는 소프트웨어를 퍼뜨리는 사이트로 등록되어 있습니다. "
                            "접속하거나 파일을 받지 마세요."}
     if phishing_verdict == "danger":
         return {"kind": "피싱 위험",
                 "message": "피싱 사이트일 가능성이 높습니다. 아이디·비밀번호·금융정보를 입력하지 마세요."}
     if phishing_verdict == "caution":
         return {"kind": "피싱 경고",
-                "message": "피싱으로 단정할 수는 없지만 의심 신호가 있습니다. 개인정보를 입력하기 전에 주소를 다시 확인하세요."}
-    message = "피싱 의심 신호가 발견되지 않았습니다."
+                "message": "피싱으로 단정할 수는 없지만 의심 정황이 있습니다. 개인정보를 입력하기 전에 주소를 다시 확인하세요."}
+    message = "피싱 의심 정황이 발견되지 않았습니다."
     if notice_count:
         message += f" 다만 피싱과 별개로 확인이 필요한 점이 {notice_count}건 있습니다."
     return {"kind": "피싱 안전", "message": message}

@@ -21,7 +21,7 @@ def image_path(image_id: str | None):
 def analyze_context(image_id: str | None, page_purpose: str | None) -> dict:
     path = image_path(image_id)
     if path is None:
-        return {"status": "no_context", "message": "맥락 정보 없음 (URL 직접 입력 또는 안내문 이미지 없음)",
+        return {"status": "no_context", "message": "비교할 QR 표시 정보 없음 (링크 직접 입력 또는 QR 주변 사진 없음)",
                 "notice_purpose": None, "page_purpose": page_purpose, "signal": None}
-    return {"status": "phase2", "message": "안내문 맥락 비교는 2단계에서 제공 예정",
+    return {"status": "phase2", "message": "QR 표시 목적과 실제 페이지 목적 비교 기능은 2단계에서 제공 예정",
             "image_id": image_id, "notice_purpose": None, "page_purpose": page_purpose, "signal": None}

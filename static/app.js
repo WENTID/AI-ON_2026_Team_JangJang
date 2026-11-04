@@ -200,9 +200,11 @@ const badge = (s) => `<span class="badge ${s}">${STATUS_LABEL[s]}</span>`;
 function checkDetail(c) {
   if (!c.items.length) return `<div class="check-detail"><p>${esc(c.summary)}</p></div>`;
   const rows = c.items.map((i) => {
-    const pts = i.type === "signal" && i.points
-      ? ` · ${i.tier === "safe" ? "−" : "+"}${i.points}점 (${i.tier === "safe" ? "안전 신호" : i.tier === "weak" ? "약한 신호" : i.source === "조합 규칙" ? "조합 규칙" : i.tier === "confirmed" ? "확정 신호" : "강한 신호"})`
-      : i.type === "notice" ? " · 점수와 별개인 주의사항" : "";
+    const kind = i.tier === "safe" ? "안전 근거" : i.tier === "weak" ? "저위험 근거"
+      : i.source === "조합 규칙" ? "복합 위험 근거" : "고위험 근거";
+    const pts = i.type === "notice" ? " · 점수와 별개인 주의사항"
+      : i.tier === "confirmed" ? " · 피싱 DB 등재 (점수와 관계없이 위험)"
+      : i.points ? ` · ${i.tier === "safe" ? "−" : "+"}${i.points}점 (${kind})` : "";
     return `<li><p>${esc(i.detail)}</p><p class="muted small">출처: ${esc(i.source)}${pts}</p></li>`;
   }).join("");
   return `<div class="check-detail"><ul>${rows}</ul></div>`;
@@ -309,8 +311,8 @@ function renderResult(d) {
   const b = d.breakdown;
   const ck = d.checks;
   $("detail-body").innerHTML = `<div class="kv">
-    <div><span class="k">피싱 점수</span><span class="v">${d.score}점 (경고 ${b.thresholds.caution}점 / 위험 ${b.thresholds.danger}점 이상, 화면 위험도는 100점에서 자름)</span></div>
-    <div><span class="k">점수 구성</span><span class="v">강한 신호 +${b.strong}, 약한 신호 +${b.weak} (원점수 ${b.weak_raw}, 상한 ${b.weak_cap}), 안전 신호 −${b.safe}</span></div>
+    <div><span class="k">피싱 점수</span><span class="v">${d.score}점 (판정 기준: 경고 ${b.thresholds.caution}점 이상, 위험 ${b.thresholds.danger}점 이상 / 위험도 표시 상한 100점 적용)</span></div>
+    <div><span class="k">점수 구성</span><span class="v">고위험 근거 +${b.strong}점, 저위험 근거 +${b.weak}점 (합계 ${b.weak_raw}점, 반영 상한 ${b.weak_cap}점), 안전 근거 −${b.safe}점</span></div>
     <div><span class="k">접속 결과</span><span class="v">${esc(ck.fetch)}</span></div>
     <div><span class="k">도메인 생성일</span><span class="v">${esc(ck.domain_created)}</span></div>
     <div><span class="k">인증서</span><span class="v">${esc(ck.cert)}</span></div>

@@ -25,9 +25,10 @@ def _checks(p: dict):
 
 
 def mapping_problems(crime_id: str = DEFAULT_CRIME) -> list[str]:
-    """scoring.json 의 모든 신호·조합 규칙이 정확히 한 검사 항목에 들어 있는지 검사한다. (테스트용)"""
+    """scoring.json 의 모든 신호·조합 규칙이 정확히 한 검사 항목에 들어 있는지 검사한다. (테스트용)
+    fact 신호는 화면에 나오지 않는 조합 조건이라 검사 항목에 넣지 않는다."""
     cfg = config.scoring()
-    known = set(cfg["signals"]) | {c["id"] for c in cfg["combos"]}
+    known = {k for k, v in cfg["signals"].items() if v["tier"] != "fact"} | {c["id"] for c in cfg["combos"]}
     seen: dict[str, str] = {}
     problems = []
     for p in crime_type(crime_id)["principles"]:
@@ -123,8 +124,11 @@ def build(*, verdict: str, phishing_verdict: str, risk_reasons: list[dict], safe
     elif phishing_verdict != "safe" and risk_reasons:
         top = _principle_of(ct, risk_reasons[0]["id"], "signals")
     else:
-        for n in notices:
-            p = _principle_of(ct, n["id"], "notices")
+        # 안전 판정이어도 안전 안내(actions.safe)가 있는 수칙의 근거가 있으면 그 안내를 보여 준다.
+        # 예: 신뢰 사이트의 실행 파일 다운로드 → 점수는 안전이지만 '공식 마켓에서만 설치' 안내
+        found = [(n["id"], "notices") for n in notices] + [(r["id"], "signals") for r in risk_reasons]
+        for item_id, key in found:
+            p = _principle_of(ct, item_id, key)
             if p and verdict in p.get("actions", {}):
                 top = p
                 break

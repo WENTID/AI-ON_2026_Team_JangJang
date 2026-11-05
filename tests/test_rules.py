@@ -18,7 +18,7 @@ def test_weak_signals_only_reach_caution_at_most():
 
 
 def test_confirmed_signal_is_danger_even_with_safe_signals():
-    r = score([make_signal("phishing_db", ""), make_signal("trusted_site", ""), make_signal("old_domain", "")])
+    r = score([make_signal("phishing_db", ""), make_signal("trusted_site", ""), make_signal("valid_cert", "")])
     assert r["verdict"] == "danger"
 
 
@@ -33,8 +33,8 @@ def test_http_without_form_stays_weak():
 
 
 def test_safe_signals_reduce_score():
-    r = score([make_signal("new_domain", ""), make_signal("valid_cert", "")])
-    assert r["score"] == 30 - 5
+    r = score([make_signal("brand_lookalike", ""), make_signal("valid_cert", "")])
+    assert r["score"] == 35 - 5
 
 
 # ---------- URL 구조 ----------
@@ -101,16 +101,56 @@ def test_analyze_phishing_like_page_is_danger():
     ids = {x["id"] for x in r["risk_reasons"]}
     assert {"new_domain", "brand_lookalike", "brand_form_mismatch", "http_sensitive_form"} <= ids
     assert r["verdict"] == "danger"
-    assert any(n["id"] == "http" for n in r["notices"])
+    assert r["notices"] == []  # http는 점수 신호로만 표시 (주의사항 중복 없음)
 
 
-def test_analyze_download_notice_does_not_change_verdict():
+def test_analyze_download_is_strong_signal():
+    # 도메인 나이를 모르는 곳의 apk는 단독으로 '경고' (40점)
+    snap = fake_snapshot("https://dl.apkfiles-test.net/app.apk", "", created=None)
+    snap["trace"]["is_download"] = True
+    r = analyze(snap, use_ai=False)
+    assert r["verdict"] == "caution"
+    assert [x["id"] for x in r["risk_reasons"]] == ["download"]
+    assert r["notices"] == []
+    assert r["summary"] == "앱 설치 경고"
+
+    # 강한 신호(IP 주소 접속)와 겹치면 '위험' (40 + 35 + http 8)
+    snap = fake_snapshot("http://123.45.67.89/app.apk", "", created=None)
+    snap["trace"]["is_download"] = True
+    r = analyze(snap, use_ai=False)
+    assert r["verdict"] == "danger" and r["summary"] == "앱 설치 위험"
+
+    # 오래된 도메인이어도 감점이 없으므로 정상 인증서만 빼고 40 - 5 = 35 → '경고'
+    snap = fake_snapshot("https://dl.apkfiles-test.net/app.apk", "", created="2010-01-01T00:00:00Z")
+    snap["trace"]["is_download"] = True
+    snap["cert"] = {"checked": True, "valid": True, "kind": None, "error": None}
+    r = analyze(snap, use_ai=False)
+    assert r["verdict"] == "caution" and r["top_rule"]["id"] == "app_install"
+
+    # 신뢰 사이트(example.org)의 실행 파일은 점수상 안전이지만 설치 안내는 보여 준다
     snap = fake_snapshot("https://files.example.org/app.apk", "", created="2010-01-01T00:00:00Z")
     snap["trace"]["is_download"] = True
     snap["cert"] = {"checked": True, "valid": True, "kind": None, "error": None}
     r = analyze(snap, use_ai=False)
-    assert r["verdict"] == "safe"
-    assert [n["id"] for n in r["notices"]] == ["download"]
+    assert r["verdict"] == "safe" and r["top_rule"]["id"] == "app_install" and "설치" in r["action"]
+
+
+def test_hosting_alone_is_safe_but_sensitive_form_combo_raises():
+    assert score([make_signal("hosting_platform", "")])["verdict"] == "safe"
+    r = score([make_signal("hosting_platform", ""), make_signal("sensitive_form", "")])
+    assert r["verdict"] == "caution" and r["score"] == 10 + 35
+
+
+def test_ai_impersonation_alone_is_caution():
+    assert score([make_signal("ai_impersonation", "")])["verdict"] == "caution"
+
+
+def test_new_domain_alone_is_safe_but_combo_raises():
+    assert score([make_signal("new_domain", "")])["verdict"] == "safe"
+    r = score([make_signal("new_domain", ""), make_signal("brand_lookalike", "")])
+    assert r["verdict"] == "danger" and r["score"] == 10 + 35 + 35
+    r = score([make_signal("new_domain", ""), make_signal("shortener_cross_domain", "")])
+    assert r["verdict"] == "danger" and r["score"] == 10 + 20 + 35
 
 
 def test_malware_db_escalates_to_danger():
@@ -120,7 +160,7 @@ def test_malware_db_escalates_to_danger():
     assert r["verdict"] == "danger"
     # 피싱 판정과 문구는 악성코드와 섞이지 않아야 한다.
     assert r["phishing_verdict"] == "safe"
-    assert r["headline"]["kind"] == "악성코드 위험"
+    assert r["headline"]["kind"] == "악성코드"
     assert "피싱 사이트일 가능성" not in r["headline"]["message"]
     assert all(x["id"] != "malware_db" for x in r["risk_reasons"])
 
@@ -181,24 +221,25 @@ def test_hierarchy_top_is_crime_type():
     assert checks["shortener"]["status"] == "na"
     assert checks["ai_impersonation"]["status"] == "na" and checks["ai_impersonation"]["summary"] == "AI 분석 꺼짐"
     assert checks["cert"]["status"] == "na"  # http라 해당 없음
-    # http 는 신호와 주의사항이 하나로 합쳐져 한 번만 나온다
-    assert [i["id"] for i in checks["https"]["items"]] == ["http"]
+    # http 는 점수 신호로 한 번만 나오고, 조합 규칙은 원래 신호의 검사 항목 안에 들어간다
+    assert [i["id"] for i in checks["https"]["items"]] == ["http", "http_sensitive_form"]
+    assert [i["id"] for i in checks["domain_age"]["items"]] == ["new_domain", "new_domain_brand"]
+    assert "http_form" not in checks and "new_domain_brand" not in checks
     assert r["risk_display"]["value"] == 100 and r["score"] > 100  # 화면 표시는 100점 상한
 
 
 def test_verdict_label_caution_is_warning():
-    r = score([make_signal("new_domain", "")])
+    r = score([make_signal("brand_lookalike", "")])
     assert r["verdict"] == "caution"
     from app.scoring import VERDICT_LABEL
     assert VERDICT_LABEL["caution"] == "경고"
 
 
 def test_hierarchy_download_and_malware():
-    snap = fake_snapshot("https://files.example.org/app.apk", "", created="2010-01-01T00:00:00Z")
+    snap = fake_snapshot("https://dl.apkfiles-test.net/app.apk", "", created=None)
     snap["trace"]["is_download"] = True
-    snap["cert"] = {"checked": True, "valid": True, "kind": None, "error": None}
     r = analyze(snap, use_ai=False)
-    assert r["verdict"] == "safe" and r["top_rule"]["id"] == "app_install"
+    assert r["verdict"] == "caution" and r["top_rule"]["id"] == "app_install"
     assert "설치" in r["action"]
 
     snap = fake_snapshot("https://example.org/", "<title>hi</title>", created="2010-01-01T00:00:00Z")
@@ -214,7 +255,7 @@ def test_hierarchy_safe_has_no_top_rule():
     assert r["verdict"] == "safe" and r["top_rule"] is None
     safe = next(c for c in r["report"] if c["id"] == "safe_evidence")
     found = {k["id"] for s in safe["sections"] for k in s["checks"] if k["status"] == "safe"}
-    assert found >= {"old_domain", "valid_cert"}
+    assert found >= {"valid_cert"}
     assert r["risk_display"]["value"] == r["score"]
 
 
@@ -237,3 +278,48 @@ def test_ai_url_cache_returns_same_result(tmp_path, monkeypatch):
     saved["saved_at"] = time.time() - 10 * 24 * 3600
     path.write_text(json.dumps(saved), encoding="utf-8")
     assert ai_judge._read_url_cache("https://example.net/a", model) is None
+
+
+# ---------- 중복 묶음: 규칙·AI가 같은 사칭을 함께 잡으면 점수는 한 번만 ----------
+def test_impersonation_overlap_counts_once():
+    r = score([make_signal("brand_form_mismatch", "규칙"), make_signal("ai_impersonation", "AI")])
+    assert r["score"] == 40
+    pts = {s["id"]: s["points"] for s in r["risk_reasons"]}
+    assert sorted(pts.values()) == [0, 40]
+    # 하나만 걸리면 그대로 반영
+    assert score([make_signal("brand_form_mismatch", "")])["score"] == 40
+
+
+def test_ai_principle_is_separate_category():
+    from app import hierarchy
+    ids = [p["id"] for p in hierarchy.crime_type()["principles"]]
+    assert ids[0] == "ai_analysis"
+    assert hierarchy.mapping_problems() == []
+
+
+def test_ai_brand_mismatch_when_ai_is_sure():
+    # 민감 정보 요구는 없지만 AI가 '운영 주체 아님'을 확신 → 강한 신호 35점(정상 인증서 −5를 받아도 단독 경고)
+    ai = {"claimed_service": "Ledger", "page_purpose": "지갑 업데이트 안내", "requested_info": [],
+          "official_domain_guess": "ledger.com", "domain_matches_service": False, "confidence": 0.9, "reason": ""}
+    sig, _ = ai_signal(ai, "ledger-update.example.net")
+    assert sig["id"] == "ai_brand_mismatch"
+    assert score([sig])["verdict"] == "caution"
+    # AI 확신이 부족하거나 운영 주체 여부를 모르면 약한 신호(10점)로만
+    assert ai_signal({**ai, "confidence": 0.7}, "ledger-update.example.net")[0]["id"] == "ai_brand_claim"
+    assert ai_signal({**ai, "domain_matches_service": None}, "ledger-update.example.net")[0]["id"] == "ai_brand_claim"
+    assert score([sig, make_signal("valid_cert", "")])["verdict"] == "caution"
+    # 무료 호스팅과 겹쳐도 10 + 35 = 45 → 경고 (위험은 아님)
+    r = score([make_signal("hosting_platform", ""), sig])
+    assert r["verdict"] == "caution" and r["score"] == 45
+
+
+def test_safe_levels_split_display_only():
+    from app.analyzer import safe_level, headline
+    th = {"check": 15, "caution": 30, "danger": 60}
+    assert [safe_level(s, th) for s in (0, 1, 14, 15, 29)] == ["none", "minor", "minor", "check", "check"]
+    assert headline("safe", False, 0, level="check")["message"].startswith("피싱 근거는 부족")
+    # 판정 자체는 '안전'으로 유지되고 화면 라벨만 바뀐다
+    snap = fake_snapshot("https://example.org/", "<title>hi</title>", created="2010-01-01T00:00:00Z")
+    snap["cert"] = {"checked": True, "valid": True, "kind": None, "error": None}
+    r = analyze(snap, use_ai=False)
+    assert r["verdict"] == "safe" and r["safe_level"] == "none" and r["verdict_label"] == "정황 없음"

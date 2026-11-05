@@ -1,6 +1,8 @@
 {
   "_설명": "피싱 점수 설정. tier: confirmed(확정, 즉시 위험) / strong(강한 신호) / weak(약한 신호, 합계 상한 적용) / safe(안전 신호, 감점) / fact(점수 없음, 조합 규칙 조건용)",
+  "_thresholds_설명": "caution·danger 는 판정 기준. check 는 '안전' 구간(30점 미만)의 화면 문구만 나누는 기준: 0점 정황 없음 / 1~check-1 정황 미약 / check~29 확인 권장",
   "thresholds": {
+    "check": 15,
     "caution": 30,
     "danger": 60
   },
@@ -9,12 +11,13 @@
     "phishing_db":            {"tier": "confirmed", "points": 0,  "label": "피싱 DB 등재"},
 
     "brand_lookalike":        {"tier": "strong", "points": 35, "label": "유명 브랜드 유사 도메인"},
-    "new_domain":             {"tier": "strong", "points": 30, "label": "신규 등록 도메인", "max_age_days": 30},
+    "new_domain":             {"tier": "strong", "points": 10, "label": "신규 등록 도메인", "max_age_days": 30},
     "shortener_cross_domain": {"tier": "strong", "points": 20, "label": "단축 URL이 다른 도메인으로 이동"},
     "ip_host":                {"tier": "strong", "points": 35, "label": "IP 주소로 된 URL"},
     "brand_form_mismatch":    {"tier": "strong", "points": 40, "label": "브랜드와 도메인이 다른 입력 폼"},
-    "ai_impersonation":       {"tier": "strong", "points": 60, "label": "AI 판단: 사칭 페이지"},
+    "ai_impersonation":       {"tier": "strong", "points": 40, "label": "AI 판단: 사칭 페이지"},
     "ai_context_mismatch":    {"tier": "strong", "points": 40, "label": "AI 판단: 안내문과 페이지 목적 불일치"},
+    "download":               {"tier": "strong", "points": 40, "label": "실행·설치 파일 다운로드로 연결"},
 
     "http":                   {"tier": "weak", "points": 8,  "label": "암호화되지 않은 연결(http)"},
     "long_url":               {"tier": "weak", "points": 5,  "label": "비정상적으로 긴 URL", "min_length": 100},
@@ -27,23 +30,31 @@
                                "tlds": ["top", "xyz", "icu", "cyou", "buzz", "click", "link", "rest", "cfd", "sbs", "lol", "monster", "quest", "bond", "zip", "mov", "tk", "ml", "ga", "cf", "gq"]},
     "form_posts_elsewhere":   {"tier": "weak", "points": 8,  "label": "입력 정보가 다른 도메인으로 전송됨"},
     "ai_brand_claim":         {"tier": "weak", "points": 10, "label": "AI 판단: 공식 도메인이 아닌 곳에서 브랜드 표방"},
-    "hosting_platform":       {"tier": "weak", "points": 6,  "label": "무료 호스팅·웹빌더 주소"},
+    "ai_brand_mismatch":      {"tier": "strong", "points": 35, "label": "AI 판단: 운영 주체가 아닌 도메인에서 브랜드 표방"},
+    "hosting_platform":       {"tier": "weak", "points": 10,  "label": "무료 호스팅·웹빌더 주소"},
 
     "trusted_site":           {"tier": "safe", "points": 40, "label": "신뢰 사이트 목록에 포함"},
-    "old_domain":             {"tier": "safe", "points": 15, "label": "오래된 도메인", "min_age_days": 1095},
     "valid_cert":             {"tier": "safe", "points": 5,  "label": "정상 인증서"},
 
     "sensitive_form":         {"tier": "fact", "points": 0,  "label": "비밀번호·결제 정보 입력란"}
   },
+  "_overlaps_설명": "같은 사실을 서로 다른 방법(규칙·AI)으로 잡는 신호 묶음. 함께 걸리면 점수가 가장 큰 하나만 반영하고 나머지는 0점(근거로는 표시).",
+  "overlaps": [
+    {"id": "impersonation", "signals": ["ai_impersonation", "ai_brand_mismatch", "brand_form_mismatch"],
+     "note": "규칙과 AI가 같은 사칭을 함께 확인해 점수는 한 번만 반영"}
+  ],
   "combos": [
     {"id": "http_sensitive_form", "when": ["http", "sensitive_form"], "tier": "strong", "points": 35,
      "label": "암호화되지 않은 연결에서 민감 정보 입력",
      "detail": "암호화되지 않은 연결(http)에서 비밀번호·결제 정보 등을 입력받음"},
-    {"id": "new_domain_brand", "when": ["new_domain", "brand_lookalike"], "tier": "strong", "points": 15,
+    {"id": "new_domain_brand", "when": ["new_domain", "brand_lookalike"], "tier": "strong", "points": 35,
      "label": "신규 도메인 + 브랜드 유사",
      "detail": "최근 만들어진 도메인이 유명 브랜드와 비슷함"},
-    {"id": "shortener_new_domain", "when": ["shortener_cross_domain", "new_domain"], "tier": "strong", "points": 15,
+    {"id": "shortener_new_domain", "when": ["shortener_cross_domain", "new_domain"], "tier": "strong", "points": 35,
      "label": "단축 URL + 신규 도메인",
-     "detail": "단축 URL이 최근 만들어진 도메인으로 연결됨"}
+     "detail": "단축 URL이 최근 만들어진 도메인으로 연결됨"},
+    {"id": "hosting_sensitive_form", "when": ["hosting_platform", "sensitive_form"], "tier": "strong", "points": 35,
+     "label": "무료 호스팅 페이지에서 민감 정보 입력",
+     "detail": "누구나 만들 수 있는 무료 호스팅·웹빌더 페이지에서 비밀번호·결제 정보 등을 입력받음"}
   ]
 }

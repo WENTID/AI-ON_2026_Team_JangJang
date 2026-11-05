@@ -5,6 +5,7 @@
 - 약한 신호: 낮은 배점, 합계 상한(weak_cap). 약한 신호만으로는 최대 '경고'
 - 안전 신호: 감점. 확정 신호는 상쇄하지 못함
 - 조합 규칙: 함께 나타나면 위험한 신호 조합에 추가 점수
+- 중복 묶음(overlaps): 같은 사실을 규칙·AI가 함께 잡으면 점수가 큰 하나만 반영
 배점·임계값·조합 규칙은 모두 config/scoring.json 에서 읽는다.
 """
 from . import config
@@ -26,6 +27,15 @@ def score(signals: list[dict]) -> dict:
         if all(cond in present for cond in combo["when"]):
             signals.append({"id": combo["id"], "tier": combo["tier"], "points": combo["points"],
                             "label": combo["label"], "detail": combo["detail"], "source": "조합 규칙"})
+
+    # 중복 묶음: 함께 걸린 신호 중 점수가 가장 큰 것(같으면 앞에 적힌 것)만 남기고 나머지는 0점 처리
+    for group in cfg.get("overlaps", []):
+        hits = [s for s in signals if s["id"] in group["signals"]]
+        if len(hits) < 2:
+            continue
+        keep = max(hits, key=lambda s: (s["points"], -group["signals"].index(s["id"])))
+        signals = [s if s is keep or s not in hits else
+                   {**s, "points": 0, "detail": f"{s['detail']} ({group['note']})"} for s in signals]
 
     by_tier = {t: [s for s in signals if s["tier"] == t] for t in ("confirmed", "strong", "weak", "safe")}
     strong = sum(s["points"] for s in by_tier["strong"])

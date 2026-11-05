@@ -5,6 +5,7 @@
     "short: 결과 리포트의 대분류 이름(짧은 용어). title: 예방 수칙 문장(판정 카드·예방 수칙 목록에 표시).",
     "title / one_liner / actions / ok / 중분류·항목 이름은 초안이다. 팀이 공식 문구를 확정하면 이 파일만 고치면 된다.",
     "kind: risk(위험 근거를 묶는 수칙) / safe(안전 근거) / placeholder(아직 검사가 없는 자리, 2단계).",
+    "조합 규칙은 따로 검사 항목을 만들지 않고 주된 신호의 검사 항목 안에 넣는다. fact 신호(점수 0, 조합 조건용)는 화면에 나오지 않으므로 검사 항목에 넣지 않는다.",
     "검사 항목: signals = scoring.json 의 신호·조합 규칙 id, notices = 점수와 별개인 주의사항 id (analyzer.py).",
     "  requires = 이 검사를 할 수 있는 조건(analyzer.py 의 checks_available). 조건이 안 되면 '해당 없음/확인 불가'로 표시.",
     "  ok = 걸린 신호가 없을 때 보여 줄 문구.",
@@ -16,22 +17,40 @@
       "id": "phishing",
       "name": "피싱",
       "default_actions": {
-        "danger": "접속하지 말고, 해당 기관의 공식 앱이나 직접 입력한 주소로 확인하세요.",
-        "caution": "개인정보를 입력하기 전에 공식 앱이나 직접 입력한 주소로 한 번 더 확인하세요.",
-        "safe": "피싱 의심 정황은 없지만, 개인정보 입력은 항상 신중하게 하세요."
+        "danger": "접속하지 말고, 개인정보를 입력하지 마세요.",
+        "caution": "공식 앱으로 접속하세요.",
+        "safe": "개인정보 입력은 항상 신중하게 하세요."
       },
-      "safe_one_liner": "검사한 예방 수칙에서 피싱 의심 정황이 발견되지 않았습니다.",
+      "safe_one_liner": "피싱 정황이 발견되지 않았습니다.",
       "principles": [
+        {
+          "id": "ai_analysis",
+          "kind": "risk",
+          "short": "AI 분석",
+          "icon": "ai",
+          "title": "공식 기관·회사를 사칭하는 페이지 주의 (AI 판별)",
+          "one_liner": "유명 서비스를 내세우지만 운영 주체의 사이트가 아닙니다.",
+          "actions": {
+            "danger": "아이디·비밀번호·카드번호를 입력하지 마세요.",
+            "caution": "공식 앱으로 접속하세요."
+          },
+          "sections": [
+            {"name": "사칭 판별", "checks": [
+              {"id": "ai_impersonation", "name": "AI 사칭 판별 (페이지가 내세우는 서비스 vs 실제 도메인)",
+               "signals": ["ai_impersonation", "ai_brand_mismatch", "ai_brand_claim"], "requires": "ai", "ok": "사칭 의심 없음"}
+            ]}
+          ]
+        },
         {
           "id": "official_address",
           "kind": "risk",
           "short": "주소 확인",
           "icon": "globe",
           "title": "접속 주소가 공식 주소인지 확인",
-          "one_liner": "접속하려는 주소가 공식 사이트 주소가 아닐 가능성이 있습니다.",
+          "one_liner": "피싱 의심 주소입니다.",
           "actions": {
-            "danger": "접속하지 말고, 해당 기관의 공식 앱이나 직접 입력한 주소로 확인하세요.",
-            "caution": "주소를 공식 사이트 주소와 한 글자씩 비교해 보고, 확실하지 않으면 공식 앱으로 확인하세요."
+            "danger": "접속하지 마세요.",
+            "caution": "주소를 공식 사이트 주소와 한 글자씩 비교해 보세요."
           },
           "sections": [
             {"name": "피싱 신고 DB", "checks": [
@@ -41,10 +60,8 @@
             {"name": "도메인", "checks": [
               {"id": "brand_lookalike", "name": "유명 브랜드 유사 도메인", "signals": ["brand_lookalike"],
                "ok": "유명 브랜드와 비슷한 주소가 아님"},
-              {"id": "domain_age", "name": "도메인 생성일", "signals": ["new_domain"], "requires": "domain_age",
+              {"id": "domain_age", "name": "도메인 생성일", "signals": ["new_domain", "new_domain_brand"], "requires": "domain_age",
                "ok": "최근에 만들어진 도메인이 아님"},
-              {"id": "new_domain_brand", "name": "신규 도메인 + 브랜드 유사", "signals": ["new_domain_brand"],
-               "ok": "해당 조합 없음"},
               {"id": "tld", "name": "최상위 도메인", "signals": ["suspicious_tld"],
                "ok": "악용이 잦은 최상위 도메인이 아님"}
             ]},
@@ -56,12 +73,8 @@
               {"id": "url_structure", "name": "URL 구조 (길이·서브도메인·특수문자 등)",
                "signals": ["long_url", "many_subdomains", "encoded_chars", "at_symbol", "many_params", "punycode"],
                "ok": "특이 사항 없음"},
-              {"id": "hosting", "name": "무료 호스팅 주소", "signals": ["hosting_platform"],
+              {"id": "hosting", "name": "무료 호스팅 주소", "signals": ["hosting_platform", "hosting_sensitive_form"],
                "ok": "무료 호스팅·웹빌더 주소가 아님"}
-            ]},
-            {"name": "AI 분석", "checks": [
-              {"id": "ai_impersonation", "name": "AI 사칭 판별", "signals": ["ai_impersonation", "ai_brand_claim"],
-               "requires": "ai", "ok": "사칭 의심 없음"}
             ]}
           ]
         },
@@ -71,23 +84,21 @@
           "short": "정보 입력",
           "icon": "form",
           "title": "개인정보·금융정보 입력 요구 주의",
-          "one_liner": "공식 사이트가 아닌 곳에서 개인정보·금융정보를 입력받고 있습니다.",
+          "one_liner": "공식 사이트가 아닌 곳에서 개인정보를 입력받습니다.",
           "actions": {
-            "danger": "아이디·비밀번호·카드번호·인증번호를 절대 입력하지 마세요.",
-            "caution": "정보를 입력하기 전에 공식 앱이나 직접 입력한 주소로 같은 화면이 나오는지 확인하세요."
+            "danger": "아이디·비밀번호·카드번호·인증번호를 입력하지 마세요.",
+            "caution": "정보 입력은 공식 앱에서 하세요."
           },
           "sections": [
             {"name": "입력 폼", "checks": [
-              {"id": "brand_form", "name": "브랜드·도메인 불일치 입력 폼", "signals": ["brand_form_mismatch", "sensitive_form"],
+              {"id": "brand_form", "name": "브랜드·도메인 불일치 입력 폼", "signals": ["brand_form_mismatch"],
                "requires": "page", "ok": "브랜드를 내세워 정보를 입력받는 폼 없음"},
               {"id": "form_target", "name": "입력 정보 전송 위치", "signals": ["form_posts_elsewhere"],
                "requires": "page", "ok": "다른 도메인으로 보내는 입력 폼 없음"}
             ]},
             {"name": "연결 보안", "checks": [
-              {"id": "https", "name": "암호화 연결 (https)", "signals": ["http"], "notices": ["http"],
+              {"id": "https", "name": "암호화 연결 (https)", "signals": ["http", "http_sensitive_form"],
                "ok": "https 암호화 연결"},
-              {"id": "http_form", "name": "http + 민감 정보 입력", "signals": ["http_sensitive_form"],
-               "ok": "해당 조합 없음"},
               {"id": "cert", "name": "인증서", "notices": ["cert_error"], "requires": "cert",
                "ok": "정상 인증서"}
             ]}
@@ -99,15 +110,15 @@
           "short": "앱·파일 설치",
           "icon": "download",
           "title": "앱 설치·파일 다운로드 유도 주의",
-          "one_liner": "QR이 앱 설치 파일이나 악성코드 배포 사이트로 연결됩니다.",
+          "one_liner": "앱 설치 파일이나 악성코드 배포 사이트로 연결됩니다.",
           "actions": {
-            "danger": "접속하지 말고, 파일을 받거나 설치하지 마세요.",
-            "caution": "파일을 받거나 설치하지 마세요. 앱은 공식 앱 마켓에서만 설치하세요.",
-            "safe": "파일을 받거나 설치하지 마세요. 앱은 공식 앱 마켓에서만 설치하세요."
+            "danger": "파일을 받거나 설치하지 마세요.",
+            "caution": "앱은 공식 앱 마켓에서만 설치하세요.",
+            "safe": "앱은 공식 앱 마켓에서만 설치하세요."
           },
           "sections": [
             {"name": "파일·악성코드", "checks": [
-              {"id": "download", "name": "실행 파일 다운로드", "notices": ["download"],
+              {"id": "download", "name": "실행 파일 다운로드", "signals": ["download"],
                "ok": "파일 다운로드로 연결되지 않음"},
               {"id": "malware_db", "name": "악성코드 DB 조회", "notices": ["malware_db"], "requires": "db",
                "ok": "악성·원치 않는 소프트웨어 목록에 없음"}
@@ -123,8 +134,8 @@
           "one_liner": "QR 안내문의 목적과 실제 페이지의 목적이 다릅니다.",
           "phase2_note": "QR 표시 목적과 실제 페이지 목적 비교 기능은 2단계에서 제공 예정",
           "actions": {
-            "danger": "QR이 덧붙여진 스티커인지 확인하고, 안내문에 적힌 기관에 직접 문의하세요.",
-            "caution": "QR이 덧붙여진 스티커인지 확인하고, 안내문에 적힌 기관에 직접 문의하세요."
+            "danger": "덧붙인 스티커인지 살펴보고, 안내문의 기관에 직접 문의하세요.",
+            "caution": "덧붙인 스티커인지 살펴보고, 안내문의 기관에 직접 문의하세요."
           },
           "sections": [
             {"name": "목적 비교", "checks": [
@@ -143,8 +154,6 @@
             {"name": "", "checks": [
               {"id": "trusted_site", "name": "신뢰 사이트 목록", "signals": ["trusted_site"], "requires": "whitelist",
                "ok": "목록에 없음"},
-              {"id": "old_domain", "name": "오래된 도메인", "signals": ["old_domain"], "requires": "domain_age",
-               "ok": "3년 미만"},
               {"id": "valid_cert", "name": "정상 인증서", "signals": ["valid_cert"], "requires": "cert",
                "ok": "해당 없음"}
             ]}

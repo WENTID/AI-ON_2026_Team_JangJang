@@ -71,22 +71,17 @@
 
   <!-- 결과 -->
   <section class="panel" id="result-view" hidden>
-    <!-- 첫 화면: 판정 + 예방 수칙 한 줄 + 행동 안내 -->
+    <!-- 첫 화면: 단어 요약(예: 피싱 위험) + 한 줄 설명(근거 + 할 일) + 위험도. 같은 말을 반복하지 않도록 두 칸만 둔다 -->
     <div id="verdict" class="verdict">
       <div class="verdict-head">
         <div class="verdict-icon" id="verdict-icon"></div>
-        <div>
-          <p class="verdict-kind" id="verdict-kind"></p>
-          <p class="verdict-label" id="verdict-label"></p>
-        </div>
+        <p class="verdict-label" id="verdict-label"></p>
         <!-- 위험도: 100점 만점 표시 (100점 넘으면 100) -->
         <div class="risk-num"><span class="small">위험도</span> <b id="risk-value"></b><span class="small"> / 100</span></div>
       </div>
       <div class="risk-bar" id="risk-bar"><i id="risk-fill"></i><s id="mark-caution"></s><s id="mark-danger"></s></div>
       <div class="risk-scale" id="risk-scale"></div>
-      <p class="rule-title" id="rule-title" hidden></p>
       <p class="one-liner" id="one-liner"></p>
-      <div class="action"><span class="action-k">이렇게 하세요</span><p id="action"></p></div>
     </div>
 
     <!-- 점검 결과: 대분류(예방 수칙) > 중분류 > 검사 항목 트리. 항목을 누르면 탐지 근거가 펼쳐진다 -->

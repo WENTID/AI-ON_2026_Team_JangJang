@@ -189,6 +189,7 @@ const CAT_ICONS = {
   form: '<svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
   download: '<svg viewBox="0 0 24 24"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"/></svg>',
   qr: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/></svg>',
+  ai: '<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3M10 10h4v4h-4z"/></svg>',
   shield: '<svg viewBox="0 0 24 24"><path d="M12 3 5 6v5c0 4.6 3 8.4 7 9.5 4-1.1 7-4.9 7-9.5V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>',
 };
 let lastResult = null;
@@ -257,20 +258,16 @@ $("only-issues").addEventListener("change", renderReport);
 
 function renderResult(d) {
   // 첫 화면: 판정(색상) + 위험도(100점 만점) + 대표 예방 수칙 한 줄 + 행동 안내
-  $("verdict").className = `verdict ${d.verdict}`;
+  $("verdict").className = `verdict ${d.verdict}${d.safe_level ? " lvl-" + d.safe_level : ""}`;
   $("verdict-icon").innerHTML = ICONS[d.verdict];
-  $("verdict-kind").textContent = d.headline.kind;  // 피싱 / 악성코드 구분
-  $("verdict-label").textContent = d.verdict_label;
+  $("verdict-label").textContent = d.summary;  // 단어 요약: 피싱 위험 / 악성코드 위험 / 정황 없음 등
   const rd = d.risk_display;
   $("risk-value").textContent = rd.value;
   $("risk-fill").style.width = `${rd.value}%`;
   $("mark-caution").style.left = `${rd.caution}%`;
   $("mark-danger").style.left = `${rd.danger}%`;
-  $("risk-scale").innerHTML = `<span style="width:${rd.caution}%">안전</span><span style="width:${rd.danger - rd.caution}%">경고 ${rd.caution}</span><span>위험 ${rd.danger}</span>`;
-  $("rule-title").hidden = !d.top_rule;
-  $("rule-title").textContent = d.top_rule ? `예방 수칙 · ${d.top_rule.title}` : "";
-  $("one-liner").textContent = d.one_liner;
-  $("action").textContent = d.action;
+  $("risk-scale").innerHTML = `<span style="width:${rd.caution}%">낮음</span><span style="width:${rd.danger - rd.caution}%">경고 ${rd.caution}</span><span>위험 ${rd.danger}</span>`;
+  $("one-liner").textContent = d.card_line;  // 한 줄 설명: 근거 + 할 일
   $("more").open = false;
 
   // 점검 결과 트리: 문제가 있는 대분류만 처음부터 펼쳐 둔다.

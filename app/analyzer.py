@@ -79,30 +79,58 @@ def ai_signal(result: dict, final_host: str) -> tuple[dict | None, str]:
         return make_signal("ai_impersonation",
                            f"'{claimed}'를 표방하며 {', '.join(sensitive)}를 요구하지만, 실제 도메인({final_reg})은 "
                            f"공식 도메인({officials[0]})이 아님", source="AI 판단"), "사칭 의심"
+    # AI가 '운영 주체의 도메인이 아님'이라고 확신 있게 답하면 강한 신호(단독으로 경고). 애매하거나
+    # 브랜드 목록과 AI 판단이 엇갈리면(AI는 운영 주체라고 봄) 약한 신호로만 반영한다.
+    if (result.get("domain_matches_service") is False
+            and result.get("confidence", 0) >= cfg.get("mismatch_min_confidence", 0.8)):
+        return make_signal("ai_brand_mismatch",
+                           f"'{claimed}'를 표방하지만 AI 판단으로 실제 도메인({final_reg})은 운영 주체의 도메인이 아님 "
+                           f"(공식 도메인 추정: {officials[0]})", source="AI 판단"), "운영 주체 아님"
     return make_signal("ai_brand_claim",
                        f"'{claimed}'를 표방하지만 실제 도메인({final_reg})은 공식 도메인({officials[0]})이 아님",
                        source="AI 판단"), "공식 도메인 아님"
 
 
-def headline(phishing_verdict: str, malware: bool, notice_count: int) -> dict:
-    """결과 화면 맨 위 문구. 피싱 판정과 기타 위협(악성코드 등)을 섞지 않는다."""
+# 30점 미만('안전' 판정)을 화면에서 세 단계로 나눠 안내한다. 판정·통계는 그대로 '안전'이다.
+# 도구가 안전을 보장할 수 없으므로 '안전'이라고 단정하지 않는다.
+SAFE_LEVELS = {
+    "none": {"label": "정황 없음", "one_liner": "피싱 정황이 발견되지 않았습니다.", "action": ""},
+    "minor": {"label": "정황 미약", "one_liner": "피싱 근거는 없고, 참고할 점만 일부 있습니다.", "action": ""},
+    "check": {"label": "확인 권장", "one_liner": "피싱 근거는 부족하지만 의심되는 점이 있습니다.", "action": "공식 앱으로 접속하세요."},
+}
+
+
+def safe_level(score_value: int, thresholds: dict) -> str:
+    if score_value <= 0:
+        return "none"
+    return "check" if score_value >= thresholds.get("check", 15) else "minor"
+
+
+def headline(phishing_verdict: str, malware: bool, notice_count: int, download: bool = False,
+             level: str = "none") -> dict:
+    """결과 화면 맨 위 문구. 피싱 판정과 기타 위협(악성코드 등)을 섞지 않는다.
+    download: 실행·설치 파일 다운로드 신호가 있으면 비밀번호 입력 대신 '설치하지 말 것'을 안내한다."""
+    # kind: 판정 카드 위 작은 글씨(위협 종류). 등급(위험/경고/정황 없음 등)은 큰 글씨 라벨이 따로 보여 주므로 넣지 않는다.
+    if download and not malware and phishing_verdict in ("danger", "caution"):
+        return {"kind": "앱 설치",
+                "message": "QR이 실행·설치 파일 다운로드로 연결됩니다."}
     if malware and phishing_verdict == "danger":
-        return {"kind": "피싱 + 악성코드 위험",
+        return {"kind": "피싱 + 악성코드",
                 "message": "피싱 사이트일 가능성이 높고, 악성·원치 않는 소프트웨어 배포 사이트로도 등록되어 있습니다. 접속하지 마세요."}
     if malware:
-        return {"kind": "악성코드 위험",
+        return {"kind": "악성코드",
                 "message": "피싱 정황은 뚜렷하지 않지만, 악성·원치 않는 소프트웨어를 퍼뜨리는 사이트로 등록되어 있습니다. "
                            "접속하거나 파일을 받지 마세요."}
     if phishing_verdict == "danger":
-        return {"kind": "피싱 위험",
+        return {"kind": "피싱",
                 "message": "피싱 사이트일 가능성이 높습니다. 아이디·비밀번호·금융정보를 입력하지 마세요."}
     if phishing_verdict == "caution":
-        return {"kind": "피싱 경고",
+        return {"kind": "피싱",
                 "message": "피싱으로 단정할 수는 없지만 의심 정황이 있습니다. 개인정보를 입력하기 전에 주소를 다시 확인하세요."}
-    message = "피싱 의심 정황이 발견되지 않았습니다."
+    message = SAFE_LEVELS[level]["one_liner"]
     if notice_count:
         message += f" 다만 피싱과 별개로 확인이 필요한 점이 {notice_count}건 있습니다."
-    return {"kind": "피싱 안전", "message": message}
+    return {"kind": "피싱", "message": message}
 
 
 def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whitelist: bool = True,
@@ -160,8 +188,7 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
     age = age_days(domain.get("created"), snap["collected_at"])
     if age is not None and age < spec["new_domain"]["max_age_days"]:
         signals.append(make_signal("new_domain", f"도메인이 {max(age, 0)}일 전에 생성됨 ({fin_reg})"))
-    elif age is not None and age >= spec["old_domain"]["min_age_days"] and not hosted:
-        signals.append(make_signal("old_domain", f"도메인이 {age // 365}년 전에 생성됨"))
+    # 오래된 도메인 감점은 11/5 삭제: 해킹당한 오래된 사이트에 피싱 페이지를 올리는 경우가 많아 안전 근거로 보기 어렵다.
 
     # ---- 브랜드 유사 도메인 (신뢰 사이트는 제외) ----
     if not trusted:
@@ -174,8 +201,7 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
     # ======== 수칙 2. 개인정보·금융정보 입력 요구 주의 ========
     # ---- 연결 보안 (단독으로 판정을 바꾸지 않음) ----
     if urlsplit(final_url).scheme == "http":
-        signals.append(make_signal("http", "암호화되지 않은 연결(http)"))
-        notices.append({"id": "http", "detail": "암호화되지 않은 연결(http)이라 입력한 정보가 노출될 수 있음"})
+        signals.append(make_signal("http", "암호화되지 않은 연결(http)이라 입력한 정보가 노출될 수 있음"))
     else:
         cert = snap["cert"]
         if cert.get("valid"):
@@ -198,12 +224,13 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
         signals.append(make_signal("form_posts_elsewhere",
                                    f"입력한 정보가 다른 도메인({', '.join(page['external_form_domains'][:2])})으로 전송됨"))
 
-    # ======== 수칙 3. 앱 설치·파일 다운로드 유도 주의 (점수와 별개인 주의사항) ========
+    # ======== 수칙 3. 앱 설치·파일 다운로드 유도 주의 ========
+    # 실행·설치 파일 다운로드는 강한 신호(점수 반영). 악성코드 DB 등재는 점수와 별개로 판정을 '위험'으로 올린다.
     if trace["is_download"]:
         path = urlsplit(final_url).path
         ext = path.rsplit(".", 1)[-1].lower() if "." in path.rsplit("/", 1)[-1] else ""
-        name = "앱 설치 파일(.apk)" if ext in ("apk", "xapk") else (f"실행 파일(.{ext})" if ext else "파일")
-        notices.append({"id": "download", "detail": f"{name} 다운로드로 연결됨"})
+        name = "앱 설치 파일(.apk)" if ext in ("apk", "xapk") else (f"실행 파일(.{ext})" if ext else "실행·설치 파일")
+        signals.append(make_signal("download", f"{name} 다운로드로 연결됨"))
     if use_db and any(m["threat_type"] != "SOCIAL_ENGINEERING" for m in sb["matches"]):
         notices.append({"id": "malware_db", "escalate": True,
                         "detail": "악성·원치 않는 소프트웨어 배포 사이트로 등록됨 (Google Safe Browsing)"})
@@ -262,16 +289,28 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
     rules = hierarchy.build(verdict=verdict, phishing_verdict=phishing_verdict, risk_reasons=risk_reasons,
                             safe_reasons=final["safe_reasons"], notices=notices, unavailable=unavailable)
     th = final["breakdown"]["thresholds"]
+    level = safe_level(final["score"], th) if phishing_verdict == "safe" else None
+    action, one_liner = rules["action"], rules["one_liner"]
+    if verdict == "safe" and not rules["top_rule"]:
+        one_liner, action = SAFE_LEVELS[level]["one_liner"], SAFE_LEVELS[level]["action"]
+    head = headline(phishing_verdict, malware, len(notices),
+                    download=any(r["id"] == "download" for r in risk_reasons), level=level or "none")
+    # 결과 카드는 두 칸만: 단어 요약(위협 종류 + 등급) / 한 줄 설명(근거 + 할 일)
+    summary = SAFE_LEVELS[level]["label"] if verdict == "safe" else f"{head['kind']} {VERDICT_LABEL[verdict]}"
+    card_line = " ".join(x for x in (one_liner, action) if x)
 
     return {
         "input_url": input_url,
         "final_url": final_url,
         "redirects": trace["chain"],
         "verdict": verdict,
-        "verdict_label": VERDICT_LABEL[verdict],
+        "verdict_label": SAFE_LEVELS[level]["label"] if verdict == "safe" else VERDICT_LABEL[verdict],
+        "safe_level": level,  # 안전 판정일 때 화면 문구 단계: none / minor / check
         "phishing_verdict": phishing_verdict,
         "phishing_verdict_label": VERDICT_LABEL[phishing_verdict],
-        "headline": headline(phishing_verdict, malware, len(notices)),
+        "headline": head,
+        "summary": summary,
+        "card_line": card_line,
         "score": final["score"],
         # 화면 표시용 위험도: 100점 만점으로 자른다. (판정은 원점수 score 로 이미 끝났으므로 영향 없음)
         "risk_display": {"value": min(final["score"], 100), "max": 100,
@@ -280,8 +319,8 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
         # 판정 위계: 범죄유형, 대표 예방 수칙 한 줄, 행동 안내, 대분류>중분류>검사 항목 트리 리포트
         "crime_type": rules["crime_type"],
         "top_rule": rules["top_rule"],
-        "one_liner": rules["one_liner"],
-        "action": rules["action"],
+        "one_liner": one_liner,
+        "action": action,
         "report": rules["report"],
         "risk_reasons": risk_reasons,
         "safe_reasons": final["safe_reasons"],

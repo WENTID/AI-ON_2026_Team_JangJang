@@ -93,17 +93,22 @@ def _read(image_id: str) -> dict:
     from google.genai import types
     schema = _schema()
     start = time.perf_counter()
-    try:
-        resp = ai_judge._get_client().models.generate_content(
-            model=model,
-            contents=[types.Part.from_bytes(data=data, mime_type="image/jpeg"), "이 안내문 사진을 분석해 줘."],
-            config=types.GenerateContentConfig(
-                system_instruction=_prompt(), response_mime_type="application/json", response_schema=schema,
-                temperature=0, seed=cfg["ai"].get("seed", 0), candidate_count=1),
-        )
-        result = schema.model_validate_json(resp.text).model_dump(mode="json")
-    except Exception as e:  # noqa: BLE001 - 시간 초과·한도·형식 오류 모두 '안내문 읽기 실패'
-        return {"status": "error", "error": f"안내문 읽기 실패 ({type(e).__name__})"}
+    for attempt in range(2):  # 서버 과부하(5xx)·한도(429)·시간 초과 같은 일시 오류는 한 번 더 시도
+        try:
+            resp = ai_judge._get_client().models.generate_content(
+                model=model,
+                contents=[types.Part.from_bytes(data=data, mime_type="image/jpeg"), "이 안내문 사진을 분석해 줘."],
+                config=types.GenerateContentConfig(
+                    system_instruction=_prompt(), response_mime_type="application/json", response_schema=schema,
+                    temperature=0, seed=cfg["ai"].get("seed", 0), candidate_count=1),
+            )
+            result = schema.model_validate_json(resp.text).model_dump(mode="json")
+            break
+        except Exception as e:  # noqa: BLE001 - 시간 초과·한도·형식 오류 모두 '안내문 읽기 실패'
+            if attempt == 0 and ai_judge._is_temporary(e):
+                time.sleep(2)
+                continue
+            return {"status": "error", "error": f"안내문 읽기 실패 ({type(e).__name__})"}
     out = {"status": "ok", "model": model, "seconds": round(time.perf_counter() - start, 2), "result": result}
     cache.parent.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")

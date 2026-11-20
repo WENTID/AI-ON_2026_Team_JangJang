@@ -81,6 +81,36 @@ def test_unreadable_notice_skips_comparison_but_keeps_sticker(fake_ai):
     assert r["status"] == "unreadable" and ids(r) == ["qr_sticker"] and fake_ai["jev_calls"] == []
 
 
+def test_gemini_read_failure_falls_back_to_jev_image(fake_ai, monkeypatch):
+    """Gemini가 안내문을 못 읽으면(한도·서버 오류) Jev에 사진을 직접 넣어 판정한다."""
+    monkeypatch.setattr(notice, "read_notice", lambda image_id: {"status": "error", "error": "안내문 읽기 실패 (TimeoutError)"})
+    monkeypatch.setattr(notice, "_shrink", lambda path: b"jpeg-bytes")
+    seen = {}
+
+    def fake_ask(st, questions, images=None, **kw):
+        seen.update(state=st, questions=questions, images=images)
+        return {"status": "ok", "answers": {"match": {"type": "choice", "choice": "불일치",
+                                                      "probabilities": {"일치": 0.02, "불일치": 0.97}},
+                                            "sticker": {"type": "noul", "noul": 0.9}}}
+    monkeypatch.setattr(jev, "ask", fake_ask)
+    r = context.analyze_context("img1", page={"title": "이벤트", "text": "경품 응모"})
+    assert r["status"] == "ok" and r["engine"] == "Jev (사진 직접)"
+    assert ids(r) == ["ai_context_mismatch", "qr_sticker"]
+    ref = seen["state"]["QR 안내문 사진"]
+    assert seen["images"] == {ref: b"jpeg-bytes"} and set(seen["questions"]) == {"match", "sticker"}
+
+
+def test_error_page_is_not_compared(fake_ai):
+    """404 오류 화면을 페이지 목적으로 오해해 '불일치'를 내지 않는다. (스티커 신호는 유지)"""
+    snap = fake_snapshot("https://qr-demo.onrender.com/demo-site/none", "<html><title>404 Not Found</title><body>Not Found</body></html>")
+    snap["trace"]["status"] = 404
+    fake_ai["notice"] = {**PARKING_NOTICE, "sticker_suspected": True}
+    r = analyze(snap, use_ai=False, context_image_id="img1")
+    c = r["context"]
+    assert c["status"] == "error" and "HTTP 404" in c["message"] and fake_ai["jev_calls"] == []
+    assert [s["id"] for s in c["signals"]] == ["qr_sticker"]
+
+
 def test_sticker_and_mismatch_combo_scores_danger():
     from app.scoring import make_signal
     r = score([make_signal("hosting_platform", ""), make_signal("valid_cert", ""),

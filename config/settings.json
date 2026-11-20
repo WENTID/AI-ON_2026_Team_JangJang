@@ -55,6 +55,8 @@
     "mismatch_strong": 0.8,
     "mismatch_check": 0.5,
     "gemini_fallback": true,
+    "jev_image_fallback": true,
+    "jev_sticker_threshold": 0.8,
     "page_text_chars": 600
   },
   "screenshot": {

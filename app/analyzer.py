@@ -263,7 +263,11 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
 
     # ======== 수칙 4. 출처가 불분명한 QR 주의 — QR 안내문 맥락 (2단계) ========
     # 안내문(Gemini OCR)과 접속 페이지의 목적이 맞는지 Jev로 판정. 사진이 없으면(링크 직접 입력) 건너뜀.
-    context = analyze_context(context_image_id, page=page, ai_result=ai["result"], download_name=download_name)
+    # 접속 실패(오류·HTTP 400 이상)면 오류 화면을 '페이지 목적'으로 오해하지 않도록 비교하지 않는다.
+    fetched = not trace["error"] and (trace["status"] or 0) < 400
+    context = analyze_context(context_image_id, page=page if fetched else None,
+                              ai_result=ai["result"] if fetched else None, download_name=download_name,
+                              fetch_note=trace["error"] or f"HTTP {trace['status']}")
     signals.extend(context["signals"])
 
     # ---- 최종 판정 ----

@@ -82,6 +82,42 @@ def _gemini_match(state: dict) -> dict:
     return out
 
 
+STICKER_QUESTION = {
+    "type": "noul",
+    "instructions": "Does the QR code in `QR 안내문 사진` look like a separate sticker pasted over the original printed "
+                    "notice (edges, shadow, tilt, different paper texture)?",
+}
+
+
+def _jev_image_fallback(out: dict, image_id: str, summary: dict, cfg: dict) -> None:
+    """Gemini가 안내문을 읽지 못했을 때(한도·서버 오류): Jev에 안내문 사진을 직접 넣어 목적 일치와 스티커를 묻는다.
+    Jev 이미지 입력은 공식 문서상 실험 기능이라 대체 수단으로만 쓴다. (검증: eval/jev_results.md)"""
+    data = notice._shrink(image_path(image_id))
+    if data is None:
+        return
+    ref = "notice-photo-" + hashlib.sha1(data).hexdigest()[:12]
+    res = jev.ask({"QR 안내문 사진": ref, "접속한 페이지": summary},
+                  {"match": QUESTION, "sticker": STICKER_QUESTION}, images={ref: data})
+    if res["status"] != "ok":
+        out["message"] += f", {res['error']}"
+        return
+    a = res["answers"]["match"]
+    p = round(a.get("probabilities", {}).get("불일치", 0.0), 3)
+    p_sticker = res["answers"]["sticker"]["noul"]
+    out.update(status="ok", engine="Jev (사진 직접)", decision=a["choice"], p_mismatch=p,
+               notice_purpose="사진에서 직접 판단")
+    line = f"안내문 사진과 페이지 목적 '{out['page_purpose'] or '알 수 없음'}' 비교 (불일치 확률 {p:.2f}, 안내문 글자 읽기 실패로 사진 직접 판단)"
+    if p >= cfg["mismatch_strong"]:
+        out["signals"].append(make_signal("ai_context_mismatch", line, source="AI 판단"))
+    elif p >= cfg["mismatch_check"]:
+        out["signals"].append(make_signal("ai_context_unclear", line, source="AI 판단"))
+    if p_sticker >= cfg.get("jev_sticker_threshold", 0.8):
+        out["signals"].append(make_signal("qr_sticker", f"QR이 덧붙인 스티커로 보임 (확률 {p_sticker:.2f})", source="AI 판단"))
+    out["message"] = ("안내문 목적과 페이지 목적이 다름" if p >= cfg["mismatch_strong"] else
+                      "안내문 목적과 페이지 목적이 다를 수 있음" if p >= cfg["mismatch_check"] else
+                      "안내문 목적과 페이지 목적이 일치") + " (안내문 사진을 직접 판단)"
+
+
 def _empty(status: str, message: str) -> dict:
     return {"status": status, "message": message, "notice": None, "notice_status": None,
             "notice_purpose": None, "page_purpose": None, "decision": None, "p_mismatch": None,
@@ -89,7 +125,7 @@ def _empty(status: str, message: str) -> dict:
 
 
 def analyze_context(image_id: str | None, *, page: dict | None = None, ai_result: dict | None = None,
-                    download_name: str | None = None) -> dict:
+                    download_name: str | None = None, fetch_note: str | None = None) -> dict:
     """QR 안내문과 접속 페이지의 목적이 맞는지 판정한다. 실패해도 예외 없이 status 로 알린다.
 
     반환: status(ok/no_context/unreadable/error), message, notice(안내문 읽기 결과), notice_purpose, page_purpose,
@@ -106,6 +142,9 @@ def analyze_context(image_id: str | None, *, page: dict | None = None, ai_result
     out["page_purpose"] = (ai_result or {}).get("page_purpose") or ((page or {}).get("title") or None)
     if read["status"] != "ok":
         out.update(message=read.get("error") or "안내문 읽기 실패", notice_status=read.get("error"))
+        summary = page_summary(page, ai_result, download_name)
+        if summary and cfg.get("jev_image_fallback", True):
+            _jev_image_fallback(out, image_id, summary, cfg)
         return out
     n = read["result"]
     out["notice"] = {"text": n["full_text"], "purpose": n["purpose"], "organization": n["organization"],
@@ -121,7 +160,8 @@ def analyze_context(image_id: str | None, *, page: dict | None = None, ai_result
 
     summary = page_summary(page, ai_result, download_name)
     if not summary:
-        out.update(message="접속한 페이지 내용이 없어 목적을 비교하지 못함")
+        why = f" (접속 결과: {fetch_note})" if fetch_note else ""
+        out.update(message=f"접속한 페이지 내용을 가져오지 못해 목적을 비교하지 못함{why}")
         return out
     state = {"QR 안내문": n["full_text"], "접속한 페이지": summary}
 

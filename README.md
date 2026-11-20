@@ -33,11 +33,19 @@ copy .env.example .env      # 그다음 .env 파일을 열어 API 키 두 개를
 사진 올리기·링크 직접 입력은 카메라 아래 **"다른 방법으로 검사"** 메뉴에 있습니다.
 
 - **카메라**는 보안 정책상 `localhost` 또는 `https` 주소에서만 켜집니다. 권한이 없으면 "카메라로 QR 스캔" 버튼이 대신 보입니다.
-- **휴대폰으로 시연하기** (휴대폰에서 `http://PC주소:8000`으로 접속하면 카메라가 안 켜짐 → https 터널 사용)
-  1. [ngrok](https://ngrok.com/download) 설치·가입 후 인증 토큰 등록: `ngrok config add-authtoken <토큰>`
-  2. 서버를 켠 상태에서 다른 터미널에서 `ngrok http 8000`
-  3. 화면에 나온 `https://xxxx.ngrok-free.app` 주소를 휴대폰 브라우저로 열기
+- **휴대폰으로 시연하기**: 휴대폰에서 `http://PC주소:8000`으로 접속하면 카메라가 안 켜지므로, 아래 **배포(Render)** 의 https 주소로 접속합니다.
   - 시연에는 실제 피싱 주소 대신 가짜 주소·시연용 QR을 씁니다.
+
+### 배포 (Render)
+
+저장소 루트의 `render.yaml`에 배포 설정(설치·실행 명령, 파이썬 3.12, 필요한 환경변수 이름)이 들어 있습니다.
+1. <https://render.com> 가입 → GitHub 계정 연결
+2. 대시보드 **New → Blueprint** → 이 저장소 선택 → `render.yaml`이 자동으로 읽힘
+3. 환경변수 입력 칸에 `GEMINI_API_KEY`, `SAFE_BROWSING_API_KEY` 값 입력 (키는 코드·커밋에 넣지 않음)
+4. 배포가 끝나면 `https://qr-phishing-analyzer-xxxx.onrender.com` 같은 주소가 생김 → `주소/api/health`에서 `"ai": true`면 키 정상
+- `main`에 push하면 자동으로 다시 배포됩니다.
+- 무료 요금제는 15분 동안 접속이 없으면 잠들고, 다음 접속 때 깨어나는 데 30초~1분 걸립니다. **시연 직전에 한 번 접속**해 깨워 둡니다.
+- 무료 서버는 재시작하면 저장 파일(`data/uploads`, AI 캐시 등)이 지워집니다. 분석 동작에는 문제없습니다.
 - 시연용 QR 이미지: `python scripts/make_demo_qr.py` → `demo/` 폴더 (정상 1개, Google 공식 테스트 피싱 주소 1개, 두 개가 함께 있는 이미지)
 
 ### PWA 확인 방법 (로컬, 폰 설치)

@@ -34,6 +34,12 @@
     "seed": 0,
     "url_cache_hours": 24
   },
+  "jev": {
+    "enabled": true,
+    "model": "jev-latest",
+    "timeout_sec": 10,
+    "max_retries": 1
+  },
   "screenshot": {
     "enabled": false
   },

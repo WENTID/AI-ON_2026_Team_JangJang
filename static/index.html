@@ -4,6 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>QR 피싱 분석기</title>
+  <!-- PWA: 홈 화면 설치 정보(이름·아이콘·전체 화면) -->
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <meta name="theme-color" content="#0d1530">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+  <!-- iOS(Safari)는 manifest 일부를 무시하므로 메타태그로 따로 알려 준다 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="QR 피싱 분석기">
+  <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -165,5 +175,18 @@
 
 <footer class="footer">QR 피싱 분석기 · 팀 장장 · AI:ON 2026 교내 AI 경진대회 출품작</footer>
 <script src="/static/app.js"></script>
+<!-- PWA: 서비스워커 등록. 지원하지 않거나 실패해도 앱은 평소처럼 동작한다 -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      try {
+        navigator.serviceWorker.register("/sw.js", { scope: "/" })
+          .catch((e) => console.warn("서비스워커 등록 실패:", e));
+      } catch (e) {
+        console.warn("서비스워커 등록 실패:", e);
+      }
+    });
+  }
+</script>
 </body>
 </html>

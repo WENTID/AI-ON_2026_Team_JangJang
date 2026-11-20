@@ -1,0 +1,9 @@
+# 개발·검증용 라이브러리 (서버 배포에는 필요 없음 → requirements.txt 와 분리)
+# 설치: .\.venv\Scripts\python -m pip install --only-binary=:all: --require-hashes -r requirements-dev.txt
+#
+# Pillow: 이미지에 한글을 써서 OCR 테스트용 안내문 이미지를 만든다. (OpenCV는 한글 출력 불가)
+#   - PyPI 공식 배포(python-pillow 프로젝트), MIT-CMU 라이선스, 필수 의존 라이브러리 없음
+#   - 13.0.0 (2026-10-16 배포), OSV 취약점 DB 등재 0건 (2026-11-20 확인)
+#   - 아래 해시는 PyPI에 올라간 Windows/Python 3.15용 파일의 SHA-256. 다른 파일이면 설치가 거부된다.
+pillow==13.0.0 \
+    --hash=sha256:d4737f50d23ddd11d6685faacbb9252887dde0bc7997127757247983d74399d6

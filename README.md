@@ -17,6 +17,11 @@ copy .env.example .env      # 그다음 .env 파일을 열어 API 키 두 개를
 .\.venv\Scripts\python scripts\update_whitelist.py   # 신뢰 사이트 목록(Tranco 상위 1만 개) 만들기
 ```
 
+검증·테스트 스크립트를 돌릴 때만 개발용 라이브러리를 추가로 설치합니다. 서버 실행에는 필요 없습니다.
+```powershell
+.\.venv\Scripts\python -m pip install --only-binary=:all: --require-hashes -r requirements-dev.txt
+```
+
 | 환경변수 (.env) | 어디서 발급 | 없으면 |
 |---|---|---|
 | `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com) | AI 사칭 판별이 "AI 분석 불가"로 표시되고 규칙만으로 판정 |

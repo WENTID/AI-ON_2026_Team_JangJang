@@ -1,6 +1,8 @@
 beautifulsoup4==4.15.0
 fastapi==0.162.0
 google-genai==2.34.0
+httpcore2==2.16.2
+httpx2==2.16.2
 httpx==0.28.1
 numpy==2.5.4
 opencv-python-headless==5.0.0.93
@@ -9,4 +11,6 @@ pytest==9.2.0
 python-dotenv==1.2.4
 python-multipart==0.0.33
 tldextract==5.4.0
+truststore==0.10.5
+typesafe-sdk==0.7.5
 uvicorn==0.54.0

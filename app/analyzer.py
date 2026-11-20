@@ -226,10 +226,12 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
 
     # ======== 수칙 3. 앱 설치·파일 다운로드 유도 주의 ========
     # 실행·설치 파일 다운로드는 강한 신호(점수 반영). 악성코드 DB 등재는 점수와 별개로 판정을 '위험'으로 올린다.
+    download_name = None
     if trace["is_download"]:
         path = urlsplit(final_url).path
         ext = path.rsplit(".", 1)[-1].lower() if "." in path.rsplit("/", 1)[-1] else ""
         name = "앱 설치 파일(.apk)" if ext in ("apk", "xapk") else (f"실행 파일(.{ext})" if ext else "실행·설치 파일")
+        download_name = path.rsplit("/", 1)[-1] or name
         signals.append(make_signal("download", f"{name} 다운로드로 연결됨"))
     if use_db and any(m["threat_type"] != "SOCIAL_ENGINEERING" for m in sb["matches"]):
         notices.append({"id": "malware_db", "escalate": True,
@@ -260,9 +262,9 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
             ai["message"] = res["error"]
 
     # ======== 수칙 4. 출처가 불분명한 QR 주의 — QR 안내문 맥락 (2단계) ========
-    context = analyze_context(context_image_id, ai["result"]["page_purpose"] if ai["result"] else None)
-    if context["signal"]:
-        signals.append(context["signal"])
+    # 안내문(Gemini OCR)과 접속 페이지의 목적이 맞는지 Jev로 판정. 사진이 없으면(링크 직접 입력) 건너뜀.
+    context = analyze_context(context_image_id, page=page, ai_result=ai["result"], download_name=download_name)
+    signals.extend(context["signals"])
 
     # ---- 최종 판정 ----
     # 피싱 판정과 기타 위협은 따로 계산하고 따로 표시한다.
@@ -284,7 +286,8 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
         "page": None if page else "페이지 내용 없음",
         "cert": "http라 해당 없음" if is_http else (None if snap["cert"].get("checked") else "인증서 확인 불가"),
         "whitelist": None if use_whitelist else "신뢰 목록 끔",
-        "context": context["message"],
+        "context": None if context["status"] == "ok" else context["message"],
+        "notice": None if context["notice"] else (context["message"] or "안내문 사진 없음"),
     }
     rules = hierarchy.build(verdict=verdict, phishing_verdict=phishing_verdict, risk_reasons=risk_reasons,
                             safe_reasons=final["safe_reasons"], notices=notices, unavailable=unavailable)

@@ -19,3 +19,5 @@ services:
         sync: false
       - key: SAFE_BROWSING_API_KEY
         sync: false
+      - key: TYPESAFE_API_KEY
+        sync: false

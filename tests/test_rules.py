@@ -213,7 +213,9 @@ def test_hierarchy_top_is_crime_type():
     # 대분류: 짧은 이름, 하위 항목 중 가장 나쁜 결과
     assert cats["official_address"]["short"] == "주소 확인"
     assert cats["official_address"]["status"] == "danger" and cats["personal_info"]["status"] == "danger"
-    assert cats["app_install"]["status"] == "safe" and cats["qr_source"]["status"] == "phase2"
+    # QR 출처(맥락 비교)는 안내문 사진이 없으면(링크 직접 입력) 해당 없음
+    assert cats["app_install"]["status"] == "safe" and cats["qr_source"]["status"] == "na"
+    assert checks["context"]["status"] == "na" and "사진 없음" in checks["context"]["summary"]
     # 검사 항목: 걸린 신호는 위험/경고, 검사했는데 없으면 안전, 검사를 못 하면 해당 없음
     assert checks["brand_lookalike"]["status"] == "danger"
     assert checks["tld"]["status"] == "caution"

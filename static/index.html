@@ -110,12 +110,17 @@
         <div id="r-final-row"><span class="k">최종 도착 주소</span><span class="v mono" id="r-final"></span></div>
       </div>
       <div class="block" id="ctx-block">
-        <h2>QR 목적 비교 <span class="pill">2단계</span></h2>
+        <h2>QR 목적 비교 <span class="pill">AI</span></h2>
         <div class="compare">
-          <div class="cmp"><span class="k">QR 표시 목적</span><strong id="ctx-notice"></strong></div>
+          <div class="cmp"><span class="k">QR 안내문 목적</span><strong id="ctx-notice"></strong></div>
           <div class="vs">vs</div>
           <div class="cmp"><span class="k">실제 페이지 목적</span><strong id="ctx-page"></strong></div>
         </div>
+        <div id="ctx-result" class="ctx-result"></div>
+        <details id="ctx-text-box" class="ctx-text" hidden>
+          <summary>사진에서 읽은 안내문 글자</summary>
+          <pre id="ctx-text"></pre>
+        </details>
       </div>
       <div class="block">
         <h2>AI 페이지 분석</h2>

@@ -256,6 +256,34 @@ function renderReport() {
 }
 $("only-issues").addEventListener("change", renderReport);
 
+// ---------- QR 목적 비교 (안내문 사진 vs 실제 페이지) ----------
+function renderContext(d) {
+  const c = d.context;
+  $("ctx-notice").textContent = c.notice_purpose || (c.status === "no_context" ? "사진 없음" : "읽지 못함");
+  $("ctx-page").textContent = c.page_purpose || (d.ai.result ? d.ai.result.page_purpose : "-");
+  let html;
+  if (c.status === "ok") {
+    const ids = c.signals.map((s) => s.id);
+    const st = ids.includes("ai_context_mismatch") ? "danger" : ids.includes("ai_context_unclear") ? "caution" : "safe";
+    const word = { danger: "목적 불일치", caution: "확인 필요", safe: c.decision === "판단불가" ? "판단 보류" : "목적 일치" }[st];
+    html = `<p class="ctx-line"><span class="badge ${st}">${word}</span> ${esc(c.message)}</p>`;
+    if (c.p_mismatch !== null) {
+      const p = Math.round(c.p_mismatch * 100);
+      html += `<div class="ctx-prob"><span class="muted small">불일치 확률</span>
+        <span class="bar"><i class="${st}" style="width:${p}%"></i></span><strong>${p}%</strong></div>`;
+    }
+    html += `<p class="muted small">${sourceTag("AI 판단")} 안내문 읽기 Gemini · 목적 비교 ${esc(c.engine)}${c.reason ? " · " + esc(c.reason) : ""}</p>`;
+  } else {
+    html = `<p class="muted small">${esc(c.message)}</p>`;
+  }
+  if (c.notice && c.notice.sticker) {
+    html += `<p class="ctx-line"><span class="badge caution">스티커 의심</span> QR이 덧붙인 스티커로 보입니다.</p>`;
+  }
+  $("ctx-result").innerHTML = html;
+  $("ctx-text-box").hidden = !c.notice;
+  $("ctx-text").textContent = c.notice ? c.notice.text : "";
+}
+
 function renderResult(d) {
   // 첫 화면: 판정(색상) + 위험도(100점 만점) + 대표 예방 수칙 한 줄 + 행동 안내
   $("verdict").className = `verdict ${d.verdict}${d.safe_level ? " lvl-" + d.safe_level : ""}`;
@@ -281,9 +309,7 @@ function renderResult(d) {
   $("r-input").textContent = d.input_url;
   $("r-final").textContent = d.final_url;
   $("r-final-row").hidden = d.final_url === d.input_url;
-  const c = d.context;
-  $("ctx-notice").textContent = c.notice_purpose || "2단계 제공 예정";
-  $("ctx-page").textContent = c.page_purpose || (d.ai.result ? d.ai.result.page_purpose : "-");
+  renderContext(d);
 
   // AI 분석
   const ai = d.ai;

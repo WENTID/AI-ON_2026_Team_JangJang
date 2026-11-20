@@ -26,6 +26,7 @@ copy .env.example .env      # 그다음 .env 파일을 열어 API 키 두 개를
 |---|---|---|
 | `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com) | AI 사칭 판별이 "AI 분석 불가"로 표시되고 규칙만으로 판정 |
 | `SAFE_BROWSING_API_KEY` | Google Cloud 콘솔 → Safe Browsing API | DB 조회가 "확인 불가"로 표시 |
+| `TYPESAFE_API_KEY` | [TypeSafe 콘솔](https://console.typesafe.ai/keys) (Jev, 유료·입력 100만 토큰당 $0.042) | QR 목적 비교를 Gemini가 대신 판정 |
 
 `.env`는 Git에 올라가지 않습니다. 키를 코드나 문서에 직접 적지 마세요.
 
@@ -46,7 +47,7 @@ copy .env.example .env      # 그다음 .env 파일을 열어 API 키 두 개를
 저장소 루트의 `render.yaml`에 배포 설정(설치·실행 명령, 파이썬 3.12, 필요한 환경변수 이름)이 들어 있습니다.
 1. <https://render.com> 가입 → GitHub 계정 연결
 2. 대시보드 **New → Blueprint** → 이 저장소 선택 → `render.yaml`이 자동으로 읽힘
-3. 환경변수 입력 칸에 `GEMINI_API_KEY`, `SAFE_BROWSING_API_KEY` 값 입력 (키는 코드·커밋에 넣지 않음)
+3. 환경변수 입력 칸에 `GEMINI_API_KEY`, `SAFE_BROWSING_API_KEY`, `TYPESAFE_API_KEY` 값 입력 (키는 코드·커밋에 넣지 않음)
 4. 배포가 끝나면 `https://qr-phishing-analyzer-xxxx.onrender.com` 같은 주소가 생김 → `주소/api/health`에서 `"ai": true`면 키 정상
 - `main`에 push하면 자동으로 다시 배포됩니다.
 - 무료 요금제는 15분 동안 접속이 없으면 잠들고, 다음 접속 때 깨어나는 데 30초~1분 걸립니다. **시연 직전에 한 번 접속**해 깨워 둡니다.
@@ -122,7 +123,7 @@ QR 안내문 사진을 Gemini가 얼마나 잘 읽는지 측정합니다. `requi
 | 등급 | 예시 | 반영 |
 |---|---|---|
 | 확정 신호 | Safe Browsing·OpenPhish 피싱 DB 등재 | 점수와 관계없이 **위험** |
-| 강한 신호 | 브랜드 유사 도메인, 30일 미만 신규 도메인, IP 주소 URL, 단축 URL이 다른 도메인으로 이동, 브랜드와 도메인이 다른 로그인 폼, **AI 사칭 판별** | 높은 배점 |
+| 강한 신호 | 브랜드 유사 도메인, 30일 미만 신규 도메인, IP 주소 URL, 단축 URL이 다른 도메인으로 이동, 브랜드와 도메인이 다른 로그인 폼, **AI 사칭 판별**, **QR 안내문과 페이지 목적 불일치** | 높은 배점 |
 | 약한 신호 | http, 긴 URL, 서브도메인·파라미터·인코딩 과다, 악용 잦은 TLD, 무료 호스팅 주소 | 낮은 배점, **합계 상한**. 약한 신호만으로는 최대 **경고** |
 | 안전 신호 | 신뢰 사이트 목록, 정상 인증서 | 감점 (확정 신호는 상쇄 못 함) |
 | 조합 규칙 | http + 비밀번호 입력, 신규 도메인 + 브랜드 유사, 단축 URL + 신규 도메인 | 추가 가중 |
@@ -134,6 +135,7 @@ QR 안내문 사진을 Gemini가 얼마나 잘 읽는지 측정합니다. `requi
 - **피싱 판정과 기타 위협은 따로 표시합니다.** 기타 위협·주의사항(악성코드 DB, 실행 파일 다운로드, http, 인증서 오류)은 피싱 판정을 바꾸지 않습니다. 단, 악성코드 DB 등재는 종합 판정을 위험으로 올리되 "악성코드 위험"으로 안내하고 피싱 판정은 따로 보여 줍니다.
 - **AI 사칭 판별**: 서버가 페이지 HTML에서 제목·본문·입력란·이미지·링크 도메인을 뽑아 Gemini에 보내고, AI는 "어떤 서비스를 표방하는지 / 페이지 목적 / 요구 정보 / 공식 도메인 추정"만 답합니다. 실제 도메인과의 비교와 점수 반영은 규칙이 합니다. 피싱 DB 등재나 신뢰 사이트처럼 규칙으로 판정이 분명하면 AI를 호출하지 않습니다.
   일관성을 위해 고정 질문·고정 JSON 형식·temperature 0·seed 고정을 쓰고, 실시간 분석에서는 같은 URL의 결과를 24시간(`settings.json`의 `ai.url_cache_hours`) 재사용합니다.
+- **QR 목적 비교 (2단계)**: QR을 찍은 카메라 화면(또는 올린 사진)에서 **Gemini가 안내문 글자·목적을 읽고**(사진이 올라오는 순간 미리 시작), **Jev가 '안내문 목적과 실제 페이지 목적·요구 정보가 일치하는가'를 확률로 판정**합니다. 불일치 확률 0.8 이상이면 강한 신호(40점), 0.5 이상이면 약한 신호(확인 권장, 10점), QR이 덧붙인 스티커로 보이면 약한 신호(15점), 스티커 + 불일치는 조합 규칙(+20점). 기준값은 `settings.json`의 `context`, 질문 문구 선택 근거는 `eval/jev_prompt_results.md`, 오타 내성은 `eval/jev_typo_results.md`. Jev가 실패하면 Gemini가 대신 판정하고, 둘 다 실패하면 '확인 불가'로 표시한 채 나머지 분석은 그대로 진행합니다. 링크를 직접 입력하면(사진 없음) 비교하지 않습니다.
 - 배점·임계값·조합 규칙: `config/scoring.json` / 접속 제한·AI 모델·단축 URL·호스팅 목록: `config/settings.json` / 신뢰 목록 추가: `config/whitelist_custom.txt`
 - 브랜드 목록: 팀 조사 목록 `config/brands_team.csv`(101개)를 고친 뒤 `python scripts/import_brands.py` 를 실행하면 `config/brands.json` 이 다시 만들어집니다. (`brands.json` 은 직접 고치지 않기)
 
@@ -154,7 +156,10 @@ app/            서버 코드
   page.py         HTML에서 제목·입력란·링크 등 추출
   brand.py        브랜드 유사 도메인, 페이지 속 브랜드 찾기
   ai_judge.py     Gemini 사칭 판별
-  context.py      QR 안내문 맥락 비교 (2단계 자리)
+  notice.py       QR 안내문 읽기 (Gemini OCR, 사진 축소·캐시·미리 읽기)
+  context.py      QR 안내문 목적 vs 페이지 목적 비교 (Jev, 실패 시 Gemini)
+  jev.py          Jev(TypeSafe) 호출
+  uploads.py      카메라 프레임·업로드 사진 저장 위치
   scoring.py      점수 계산·판정
   hierarchy.py    판정 위계: 근거를 예방 수칙별로 묶고 대표 수칙·행동 안내 선택
   analyzer.py     위 모듈을 묶는 분석 파이프라인
@@ -169,6 +174,6 @@ docs/           요구사항
 
 ## 8. 2단계 계획
 
-- QR 안내문 맥락 일치 분석: 카메라 프레임/업로드 이미지에서 안내 목적을 AI로 뽑아 실제 페이지 목적과 비교 (`app/context.py`에 자리 마련)
+- ✅ QR 안내문 맥락 일치 분석: Gemini OCR + Jev 목적 비교 (위 5. 판정 방식). 실제 안내문 사진으로 사진 크기·기준값 확정 예정
 - 스크린샷 분석(Playwright + 멀티모달 LLM): 로고가 이미지로만 있는 피싱 페이지 탐지
 - 1단계 검증에서 놓친 피싱 유형 분석·보완

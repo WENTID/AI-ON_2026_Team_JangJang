@@ -12,10 +12,10 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import config, hierarchy
+from . import config, hierarchy, jev, notice
 from .analyzer import analyze
-from .context import UPLOAD_DIR
 from .qr_decode import decode_image
+from .uploads import UPLOAD_DIR
 from .snapshot import collect
 from .urls import InvalidUrl, normalize_input
 
@@ -70,6 +70,8 @@ async def api_image(file: UploadFile = File(...), decode: bool = Form(True)):
     image_id = uuid.uuid4().hex
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     cv2.imwrite(str(UPLOAD_DIR / f"{image_id}.jpg"), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+    # 안내문 읽기(Gemini)를 지금 시작해 두면, 곧이어 오는 분석 요청에서 기다리는 시간이 줄어든다.
+    notice.prefetch(image_id)
 
     codes = []
     if decode:
@@ -88,4 +90,5 @@ def rules():
 
 @app.get("/api/health")
 def health():
-    return {"ok": True, "ai": bool(config.env("GEMINI_API_KEY")), "safe_browsing": bool(config.env("SAFE_BROWSING_API_KEY"))}
+    return {"ok": True, "ai": bool(config.env("GEMINI_API_KEY")), "safe_browsing": bool(config.env("SAFE_BROWSING_API_KEY")),
+            "jev": jev.available()}

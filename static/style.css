@@ -183,3 +183,14 @@ details summary { cursor: pointer; color: var(--primary); margin: 8px 0 4px; fon
   .verdict-icon svg { width: 26px; height: 26px; }
   .risk-num b { font-size: 1.25rem; }
 }
+
+/* QR 목적 비교 결과 (2단계 맥락 분석) */
+.ctx-result { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.ctx-line { margin: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ctx-prob { display: flex; align-items: center; gap: 8px; }
+.ctx-prob .bar { flex: 1; height: 8px; background: #eceef3; border-radius: 4px; overflow: hidden; }
+.ctx-prob .bar i { display: block; height: 100%; background: var(--safe); }
+.ctx-prob .bar i.caution { background: var(--caution); }
+.ctx-prob .bar i.danger { background: var(--danger); }
+.ctx-text { margin-top: 8px; font-size: .86rem; }
+.ctx-text pre { white-space: pre-wrap; background: #f7f8fb; border-radius: 10px; padding: 10px; margin: 6px 0 0; font-family: inherit; }

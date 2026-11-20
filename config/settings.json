@@ -40,6 +40,23 @@
     "timeout_sec": 10,
     "max_retries": 1
   },
+  "notice": {
+    "_설명": "QR 안내문 읽기(Gemini OCR). 카메라 프레임·업로드 사진을 긴 변 max_side px로 줄여 보낸다. 사진이 올라오는 순간 미리 읽기 시작한다.",
+    "enabled": true,
+    "max_side": 1024,
+    "timeout_sec": 20,
+    "min_chars": 8,
+    "purposes": ["주차요금 결제", "음식 주문", "와이파이 접속", "택배·배송 조회", "공과금·관리비 납부", "충전 요금 결제",
+                 "설문·민원 참여", "행사·이벤트 참여", "회원가입·본인인증", "메뉴·정보 보기", "앱 설치", "기타"]
+  },
+  "context": {
+    "_설명": "맥락 일치 판정(Jev). 불일치 확률이 mismatch_strong 이상이면 강한 신호, mismatch_check 이상이면 약한 신호(확인 권장). 기준값은 eval/jev_*_results.md 근거, 실제 사진 측정 후 갱신 예정. Jev 실패 시 Gemini로 대신 판정(gemini_fallback).",
+    "enabled": true,
+    "mismatch_strong": 0.8,
+    "mismatch_check": 0.5,
+    "gemini_fallback": true,
+    "page_text_chars": 600
+  },
   "screenshot": {
     "enabled": false
   },

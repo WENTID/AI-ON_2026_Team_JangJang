@@ -127,20 +127,25 @@
         },
         {
           "id": "qr_source",
-          "kind": "placeholder",
+          "kind": "risk",
           "short": "QR 출처",
           "icon": "qr",
           "title": "출처가 불분명한 QR 주의 (덧붙인 스티커 등)",
           "one_liner": "QR 안내문의 목적과 실제 페이지의 목적이 다릅니다.",
-          "phase2_note": "QR 표시 목적과 실제 페이지 목적 비교 기능은 2단계에서 제공 예정",
           "actions": {
             "danger": "덧붙인 스티커인지 살펴보고, 안내문의 기관에 직접 문의하세요.",
-            "caution": "덧붙인 스티커인지 살펴보고, 안내문의 기관에 직접 문의하세요."
+            "caution": "덧붙인 스티커인지 살펴보고, 안내문의 기관에 직접 문의하세요.",
+            "safe": "안내문과 다른 정보를 요구하면 입력하지 마세요."
           },
           "sections": [
             {"name": "목적 비교", "checks": [
-              {"id": "context", "name": "QR 표시 목적과 페이지 목적 일치 여부", "signals": ["ai_context_mismatch"],
-               "requires": "context", "ok": "QR 표시 목적과 페이지 목적 일치"}
+              {"id": "context", "name": "QR 안내 목적과 페이지 목적 일치 여부",
+               "signals": ["ai_context_mismatch", "ai_context_unclear", "sticker_context_mismatch"],
+               "requires": "context", "ok": "QR 안내 목적과 페이지 목적 일치"}
+            ]},
+            {"name": "QR 상태", "checks": [
+              {"id": "qr_sticker", "name": "덧붙인 QR 스티커", "signals": ["qr_sticker"],
+               "requires": "notice", "ok": "덧붙인 스티커 흔적 없음"}
             ]}
           ]
         },

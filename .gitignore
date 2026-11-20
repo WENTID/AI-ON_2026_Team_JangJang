@@ -17,3 +17,4 @@ data/eval_samples.csv
 # OCR 테스트 이미지·AI 응답 (scripts/ocr_test.py 로 다시 만들 수 있음)
 data/ocr_samples/
 data/ocr_raw/
+data/jev_raw/

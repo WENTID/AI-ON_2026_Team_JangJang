@@ -101,6 +101,16 @@ QR 안내문 사진을 Gemini가 얼마나 잘 읽는지 측정합니다. `requi
   예: `{"text": "안내문 글자 전부", "purpose": "주차요금 결제", "organization": "OO공단", "payment": true, "sticker": false}`
 - `run` 중에 `view`를 실행하면 페이지가 10초마다 새로고침되며 진행 상황을 보여 줍니다.
 
+### Jev vs Gemini 비교 (맥락 일치 판정)
+
+`.env`에 `TYPESAFE_API_KEY`가 필요합니다. 위 OCR 테스트(`make`, `run`)를 먼저 한 번 실행해 둡니다.
+```powershell
+.\.venv\Scripts\python scripts\jev_test.py   # → eval/jev_results.md, 시연 페이지 data/ocr_samples/jev_viewer.html
+```
+- A. 안내문 사진 77장을 Jev에 직접 넣어 안내 목적·결제 요구·스티커 의심을 Gemini 결과와 비교
+- B. `eval/context_cases.json`의 (안내문, 접속 페이지) 39쌍으로 맥락 일치 판정: Gemini(글자) / Jev(글자) / Jev(사진)
+- Jev 요금: 입력 100만 토큰당 $0.042, 출력 무료. 전체 1회 실행 약 $0.015. 응답은 `data/jev_raw/`에 저장해 재사용
+
 ## 4. 테스트
 
 ```powershell

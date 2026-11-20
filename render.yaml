@@ -1,0 +1,21 @@
+# Render 배포 설정 (Blueprint). Render 대시보드 → New → Blueprint 에서 이 저장소를 고르면 읽어 간다.
+# API 키 값은 여기에 쓰지 않는다. (sync: false = 처음 만들 때 Render 화면에서 값을 입력)
+services:
+  - type: web
+    name: qr-phishing-analyzer
+    runtime: python
+    plan: free
+    region: singapore          # 한국과 가장 가까운 지역
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    # Render 가 정해 주는 포트($PORT)로, 외부 접속(0.0.0.0)을 받도록 실행
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    autoDeploy: true           # main 에 push 하면 자동으로 다시 배포
+    envVars:
+      - key: PYTHON_VERSION    # 로컬 개발 환경과 같은 버전
+        value: 3.12.10
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SAFE_BROWSING_API_KEY
+        sync: false

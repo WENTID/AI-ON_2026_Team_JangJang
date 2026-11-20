@@ -40,6 +40,28 @@ copy .env.example .env      # 그다음 .env 파일을 열어 API 키 두 개를
   - 시연에는 실제 피싱 주소 대신 가짜 주소·시연용 QR을 씁니다.
 - 시연용 QR 이미지: `python scripts/make_demo_qr.py` → `demo/` 폴더 (정상 1개, Google 공식 테스트 피싱 주소 1개, 두 개가 함께 있는 이미지)
 
+### PWA 확인 방법 (로컬, 폰 설치)
+
+이 서비스는 **PWA(설치형 웹앱)** 입니다. 기능은 웹과 같고, 홈 화면 아이콘으로 주소창 없이 전체 화면으로 열립니다.
+- `static/manifest.webmanifest`: 앱 이름·아이콘·전체 화면 설정 (브라우저가 "설치 가능한 앱"으로 인식)
+- `static/sw.js` (서버 주소 `/sw.js`): 서비스워커. 화면 파일만 "네트워크 우선, 실패하면 캐시"로 저장. `/api/*`와 외부 도메인(jsQR, 구글 폰트)은 캐시하지 않음
+- 화면 파일 목록을 바꾸면 `sw.js`의 `VERSION`을 올립니다. (옛 캐시는 자동 삭제)
+- 서비스워커·카메라는 `localhost` 또는 `https` 주소에서만 동작합니다.
+
+**로컬(PC, Chrome/Edge)에서 확인**
+1. 서버 실행 후 <http://localhost:8000> 접속 → `F12`(개발자도구) → **Application** 탭
+2. **Manifest**: 이름 "QR 피싱 분석기", 아이콘 3개(192·512·maskable), Display `standalone`이 보이고 경고가 없으면 정상
+3. **Service workers**: `http://localhost:8000/` 범위에 `sw.js`가 **activated and is running** 이면 정상
+4. **Storage → Cache storage → `qr-shell-v1`**: `/`, `app.js`, `style.css`, 아이콘 등 화면 파일만 있고 **`/api/...` 항목이 없어야** 정상
+5. 검사를 한 번 실행한 뒤 **Network** 탭에서 `analyze` 요청의 Size 칸이 `(ServiceWorker)`나 `(disk cache)`가 아니라 실제 바이트 수로 나오면 캐시를 거치지 않은 것
+6. (선택) 주소창 오른쪽 **설치 아이콘**을 누르면 PC 앱 창으로 열림
+- 수정한 JS·CSS가 안 바뀌어 보이면: Application → Service workers → **Update on reload** 체크 후 새로고침
+
+**폰에 설치 (https 배포 주소에서)**
+- Android(Chrome): 주소 접속 → 메뉴(⋮) → **앱 설치**(또는 "홈 화면에 추가")
+- iPhone(Safari): 주소 접속 → 공유 버튼 → **홈 화면에 추가**
+- 홈 화면 아이콘으로 열었을 때 주소창 없이 전체 화면이면 성공. 카메라 권한은 처음 한 번 다시 물어봅니다.
+
 ## 3. 검증 데이터 수집과 성능 측정
 
 ```powershell

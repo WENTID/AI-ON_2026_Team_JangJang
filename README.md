@@ -88,6 +88,19 @@ copy .env.example .env      # 그다음 .env 파일을 열어 API 키 두 개를
 - 피싱 사이트는 금방 사라지므로 수집할 때 HTML·리다이렉트·도메인·인증서·Safe Browsing 결과를 모두 저장합니다(`data/snapshots/`, Git 제외).
 - 검증은 저장본으로만 돌리므로 다시 실행해도 같은 결과가 나옵니다. AI 응답도 `data/ai_cache/`에 저장해 재사용합니다.
 
+### OCR 테스트 (2단계 준비: 안내문 사진 읽기)
+
+QR 안내문 사진을 Gemini가 얼마나 잘 읽는지 측정합니다. `requirements-dev.txt` 설치가 필요합니다.
+```powershell
+.\.venv\Scripts\python scripts\ocr_test.py make   # 합성 안내문 11종 × 촬영 조건 7가지 = 77장 → data/ocr_samples/
+.\.venv\Scripts\python scripts\ocr_test.py run    # Gemini로 읽고 채점 → eval/ocr_results.md (약 8분, 응답은 data/ocr_raw/ 에 저장해 재사용)
+.\.venv\Scripts\python scripts\ocr_test.py view   # 시연 페이지 → data/ocr_samples/viewer.html (사진 옆에 정답·AI 답 비교)
+```
+- 안내문 정답: `eval/ocr_cases.json` (기관명은 가상, QR 주소는 접속 불가한 `.example` 도메인)
+- 실제 사진 추가: `data/ocr_samples/real/` 에 사진과 같은 이름의 정답 `.json`을 넣고 `run` → 같은 표에 추가됨
+  예: `{"text": "안내문 글자 전부", "purpose": "주차요금 결제", "organization": "OO공단", "payment": true, "sticker": false}`
+- `run` 중에 `view`를 실행하면 페이지가 10초마다 새로고침되며 진행 상황을 보여 줍니다.
+
 ## 4. 테스트
 
 ```powershell

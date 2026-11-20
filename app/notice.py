@@ -87,8 +87,8 @@ def _read(image_id: str) -> dict:
         return {**json.loads(cache.read_text(encoding="utf-8")), "cached": True}
     if not config.env("GEMINI_API_KEY"):
         return {"status": "error", "error": "Gemini API 키 없음"}
-    if not ai_judge._limiter.acquire(cfg["ai"]["max_requests_per_minute"], wait=False):
-        return {"status": "error", "error": "AI 요청 한도 초과"}
+    # 백그라운드 작업이라 요청 한도에 걸리면 잠시 기다린다. (분석 쪽은 read_notice 의 timeout_sec 까지만 기다림)
+    ai_judge._limiter.acquire(cfg["ai"]["max_requests_per_minute"], wait=True)
 
     from google.genai import types
     schema = _schema()

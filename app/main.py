@@ -40,6 +40,19 @@ def service_worker():
                         headers={"Cache-Control": "no-cache"})
 
 
+DEMO_SITE = Path(__file__).resolve().parent.parent / "demo_site"
+
+
+@app.get("/demo-site/{name}")
+def demo_site(name: str):
+    """시연용 가짜 페이지 (demo_site/*.html). 폼은 어디로도 전송되지 않고, 검색엔진 수집을 막는다.
+    URL만 보면 평범하지만 QR 안내문과 목적이 다른 페이지를 재현해 'QR 목적 비교'를 시연한다."""
+    pages = {p.stem: p for p in DEMO_SITE.glob("*.html")}
+    if name not in pages:
+        raise HTTPException(404, "없는 시연 페이지")
+    return FileResponse(pages[name], media_type="text/html", headers={"X-Robots-Tag": "noindex, nofollow"})
+
+
 class AnalyzeRequest(BaseModel):
     url: str
     image_id: str | None = None  # 카메라 프레임 / 업로드 원본 (맥락 분석용)

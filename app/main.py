@@ -31,6 +31,15 @@ def index():
     return FileResponse(STATIC / "index.html")
 
 
+@app.get("/sw.js")
+def service_worker():
+    # 서비스워커는 자기 파일이 있는 경로 아래만 관리할 수 있다.
+    # /static/sw.js 가 아니라 루트(/sw.js)로 제공해야 첫 화면 "/" 까지 관리한다.
+    # no-cache: 브라우저가 항상 서버에 새 버전이 있는지 확인하게 한다.
+    return FileResponse(STATIC / "sw.js", media_type="application/javascript",
+                        headers={"Cache-Control": "no-cache"})
+
+
 class AnalyzeRequest(BaseModel):
     url: str
     image_id: str | None = None  # 카메라 프레임 / 업로드 원본 (맥락 분석용)

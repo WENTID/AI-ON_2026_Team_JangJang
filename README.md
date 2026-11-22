@@ -56,7 +56,7 @@ copy .env.example .env      # 그다음 .env 파일을 열어 API 키 두 개를
 - 무료 서버는 재시작하면 저장 파일(`data/uploads`, AI 캐시 등)이 지워집니다. 분석 동작에는 문제없습니다.
 - 시연용 QR 이미지: `python scripts/make_demo_qr.py` → `demo/` 폴더 (정상 1개, Google 공식 테스트 피싱 주소 1개, 두 개가 함께 있는 이미지)
 - 시연 사례 견고성(촬영 장애·오타): `python scripts/demo_eval.py` → `eval/demo_eval_results.md`
-- **QR 목적 비교 시연 사례** (URL만으로는 안전, 안내문과 비교하면 경고): 가짜 페이지 `demo_site/`(서버 `/demo-site/<이름>`), 포스터 `python scripts/demo_cases.py make --base <배포 주소>` → `demo/case*.png`, 리허설 `python scripts/demo_cases.py check`. 진행 순서는 [docs/시연_시나리오.md](docs/시연_시나리오.md)
+- **QR 목적 비교 시연 사례** (URL만으로는 안전, 안내문과 비교하면 경고): 가짜 페이지 `demo_site/`(서버 `/demo-site/<이름>`), 포스터 `python scripts/demo_cases.py make --base <배포 주소>` → `demo/case*.png`, 리허설 `python scripts/demo_cases.py check`. 사례 6~11은 실제 보도된 큐싱 사례(주차 정산기·공공자전거 가짜 스티커, 주차 앱 사칭, 가짜 과태료 딱지, 식당 테이블 QR 교체) 재현이며 출처와 함께 `eval/real_cases.json`에 있다. 일부만 돌리려면 `--cases 6-11`. 진행 순서는 [docs/시연_시나리오.md](docs/시연_시나리오.md)
 
 ### PWA 확인 방법 (로컬, 폰 설치)
 

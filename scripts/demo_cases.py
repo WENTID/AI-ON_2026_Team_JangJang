@@ -7,6 +7,7 @@
   python scripts/demo_cases.py make  --base https://<Render 주소>      # 포스터 만들기 → demo/
   python scripts/demo_cases.py check --base https://<Render 주소>      # 배포 서버로 실제 리허설 (사진 올리기 → 분석)
   python scripts/demo_cases.py check --local                            # 배포 전 로컬 확인 (페이지 HTML을 직접 넣고 Gemini·Jev는 실제 호출)
+  python scripts/demo_cases.py check --local --cases 6-11               # 일부 사례만 (6~11 = 실제 큐싱 사례 재현, eval/real_cases.json)
 필요: requirements-dev.txt (Pillow, 포스터 만들 때만)
 """
 import argparse
@@ -23,37 +24,45 @@ sys.path.insert(0, str(ROOT / "scripts"))
 DEFAULT_BASE = "https://qr-phishing-analyzer.onrender.com"
 OUT = ROOT / "demo"
 
-# (번호, 안내문 id(eval/ocr_cases.json), 가짜 페이지, 스티커, 설명, 기대 결과)
+# 사례 1~5: 직접 설계한 시연 사례. notice = 안내문 id(eval/ocr_cases.json), page = demo_site/<page>.html
 CASES = [
-    (1, "parking", "event", False, "주차요금 안내문 → 경품 이벤트 응모(이름·휴대폰·주소)", "경고"),
-    (2, "food", "invest", False, "식당 테이블 주문 안내문 → 주식 정보 오픈채팅방", "경고"),
-    (3, "parcel", "signup", False, "택배 보관함 안내문 → 쇼핑 회원가입(이름·생년월일·휴대폰)", "경고"),
-    (4, "parking", "parking", False, "(대조군) 주차요금 안내문 → 주차요금 정산 페이지", "정황 미약 (그대로)"),
-    (5, "parking", "event", True, "주차요금 안내문 + QR 위 덧붙인 스티커 → 경품 이벤트", "위험"),
+    dict(n=1, notice="parking", page="event", sticker=False, desc="주차요금 안내문 → 경품 이벤트 응모(이름·휴대폰·주소)", expect="경고"),
+    dict(n=2, notice="food", page="invest", sticker=False, desc="식당 테이블 주문 안내문 → 주식 정보 오픈채팅방", expect="경고"),
+    dict(n=3, notice="parcel", page="signup", sticker=False, desc="택배 보관함 안내문 → 쇼핑 회원가입(이름·생년월일·휴대폰)", expect="경고"),
+    dict(n=4, notice="parking", page="parking", sticker=False, desc="(대조군) 주차요금 안내문 → 주차요금 정산 페이지", expect="정황 미약 (그대로)"),
+    dict(n=5, notice="parking", page="event", sticker=True, desc="주차요금 안내문 + QR 위 덧붙인 스티커 → 경품 이벤트", expect="위험"),
 ]
+# 사례 6~: 실제 보도된 큐싱 사례 재현 (eval/real_cases.json, 출처 포함)
+REAL = json.loads((ROOT / "eval" / "real_cases.json").read_text(encoding="utf-8"))
+CASES += REAL["cases"]
 
 
-def poster_path(n: int, notice: str, page: str, sticker: bool) -> Path:
-    return OUT / f"case{n}_{notice}_{page}{'_sticker' if sticker else ''}.png"
-
-
-def cmd_make(base: str) -> None:
+def notice_case(notice_id: str) -> dict:
+    """안내문 내용: real_cases.json 에 있으면 그것, 없으면 OCR 채점용 eval/ocr_cases.json 에서 찾는다."""
     import ocr_test
-    from PIL import Image
+    return next(c for c in REAL["notices"] + ocr_test.CASES["cases"] if c["id"] == notice_id)
+
+
+def poster_path(c: dict) -> Path:
+    return OUT / f"case{c['n']}_{c['notice']}_{c['page']}{'_sticker' if c['sticker'] else ''}.png"
+
+
+def cmd_make(base: str, cases: list[dict]) -> None:
+    import ocr_test
     OUT.mkdir(exist_ok=True)
-    for n, notice_id, page, sticker, desc, _ in CASES:
-        case = next(c for c in ocr_test.CASES["cases"] if c["id"] == notice_id)
-        url = f"{base.rstrip('/')}/demo-site/{page}"
-        if sticker:
+    for c in cases:
+        case = notice_case(c["notice"])
+        url = f"{base.rstrip('/')}/demo-site/{c['page']}"
+        if c["sticker"]:
             # 원래 안내문에는 정상 주소 QR이 인쇄돼 있고, 그 위에 가짜 페이지 QR 스티커를 덧붙인 모습
-            original = {**case, "qr": f"{base.rstrip('/')}/demo-site/parking"}
+            original = {**case, "qr": f"{base.rstrip('/')}/demo-site/{c.get('original', 'parking')}"}
             img = ocr_test.make_poster(original)
             img = _stick(img, url, len(case["lines"]))
         else:
             img = ocr_test.make_poster({**case, "qr": url})
-        path = poster_path(n, notice_id, page, sticker)
+        path = poster_path(c)
         img.save(path)
-        print(f"사례 {n}: {path.name}  ({desc})  QR → {url}")
+        print(f"사례 {c['n']}: {path.name}  ({c['desc']})  QR → {url}")
     (OUT / "demo_cases.json").write_text(json.dumps({"base": base}, ensure_ascii=False), encoding="utf-8")
 
 
@@ -72,20 +81,22 @@ def _stick(img, url: str, n_lines: int):
     return out
 
 
-def _show(n, desc, expect, plain, ctx):
+def _show(case, plain, ctx):
     c = ctx["context"]
-    print(f"\n[사례 {n}] {desc}")
+    print(f"\n[사례 {case['n']}] {case['desc']}")
+    if case.get("source"):
+        print(f"  출처           : {case['source']}")
     print(f"  URL만 검사     : {plain['summary']} ({plain['score']}점)")
-    print(f"  안내문과 비교  : {ctx['summary']} ({ctx['score']}점)   기대: {expect}")
+    print(f"  안내문과 비교  : {ctx['summary']} ({ctx['score']}점)   기대: {case['expect']}")
     print(f"  안내문 목적 '{c['notice_purpose']}' vs 페이지 목적 '{c['page_purpose']}' → {c['decision']}"
           f" (불일치 확률 {c['p_mismatch']}, {c['engine']})"
           + (" · 스티커 의심" if c["notice"] and c["notice"]["sticker"] else ""))
 
 
-def cmd_check_remote(base: str) -> None:
+def cmd_check_remote(base: str, cases: list[dict]) -> None:
     import httpx
-    for n, notice_id, page, sticker, desc, expect in CASES:
-        path = poster_path(n, notice_id, page, sticker)
+    for case in cases:
+        n, path = case["n"], poster_path(case)
         with httpx.Client(base_url=base, timeout=90) as cl:
             up = cl.post("/api/image", files={"file": (path.name, path.read_bytes(), "image/png")},
                          data={"decode": "true"}).json()
@@ -95,26 +106,27 @@ def cmd_check_remote(base: str) -> None:
                 continue
             plain = cl.post("/api/analyze", json={"url": urls[0]}).json()
             ctx = cl.post("/api/analyze", json={"url": urls[0], "image_id": up["image_id"]}).json()
-        _show(n, desc, expect, plain, ctx)
+        _show(case, plain, ctx)
 
 
-def cmd_check_local(base: str) -> None:
+def cmd_check_local(base: str, cases: list[dict]) -> None:
     """배포 전 확인: 가짜 페이지 HTML을 직접 저장본으로 만들어 분석한다. (접속·인증서·도메인 조회만 흉내, AI는 실제 호출)"""
     from app.analyzer import analyze
     from app.uploads import UPLOAD_DIR
     from tests.test_rules import fake_snapshot
-    for n, notice_id, page, sticker, desc, expect in CASES:
+    for case in cases:
+        page = case["page"]
         html = (ROOT / "demo_site" / f"{page}.html").read_text(encoding="utf-8")
         snap = fake_snapshot(f"{base.rstrip('/')}/demo-site/{page}", html, created="2019-03-01T00:00:00Z")
         snap["cert"] = {"checked": True, "valid": True, "kind": None, "error": None}
         image_id = uuid.uuid4().hex
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
         import cv2
-        img = cv2.imread(str(poster_path(n, notice_id, page, sticker)))
+        img = cv2.imread(str(poster_path(case)))
         cv2.imwrite(str(UPLOAD_DIR / f"{image_id}.jpg"), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
         plain = analyze(snap, ai_wait=True)
         ctx = analyze(snap, ai_wait=True, context_image_id=image_id)
-        _show(n, desc, expect, plain, ctx)
+        _show(case, plain, ctx)
 
 
 def main() -> None:
@@ -122,15 +134,23 @@ def main() -> None:
     ap.add_argument("cmd", choices=["make", "check"])
     ap.add_argument("--base", default=None, help="배포 주소 (예: https://qr-phishing-analyzer.onrender.com)")
     ap.add_argument("--local", action="store_true", help="배포 없이 로컬에서 확인")
+    ap.add_argument("--cases", default=None, help="일부 사례만 (예: 6-11 또는 1,4,6). 기본은 전체")
     a = ap.parse_args()
+    cases = CASES
+    if a.cases:
+        want = set()
+        for part in a.cases.split(","):
+            lo, _, hi = part.partition("-")
+            want |= set(range(int(lo), int(hi or lo) + 1))
+        cases = [c for c in CASES if c["n"] in want]
     saved = OUT / "demo_cases.json"
     base = a.base or (json.loads(saved.read_text(encoding="utf-8"))["base"] if saved.exists() else DEFAULT_BASE)
     if a.cmd == "make":
-        cmd_make(base)
+        cmd_make(base, cases)
     elif a.local:
-        cmd_check_local(base)
+        cmd_check_local(base, cases)
     else:
-        cmd_check_remote(base)
+        cmd_check_remote(base, cases)
 
 
 if __name__ == "__main__":

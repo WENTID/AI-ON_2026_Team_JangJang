@@ -282,6 +282,31 @@ function renderContext(d) {
   $("ctx-result").innerHTML = html;
   $("ctx-text-box").hidden = !c.notice;
   $("ctx-text").textContent = c.notice ? c.notice.text : "";
+  renderCross(d.cross_check);
+}
+
+// ---------- AI 교차 분석 (2차): 규칙 밖 추가 어긋남 ----------
+function renderCross(x) {
+  const box = $("cross-box");
+  box.hidden = !x || x.status === "skipped";
+  if (box.hidden) return;
+  const sevCls = { 높음: "danger", 중간: "caution", 낮음: "info" };
+  let html = "";
+  if (x.status !== "ok") {
+    html = `<p class="muted small">${esc(x.message)}</p>`;
+  } else if (!x.findings.length) {
+    html = `<p class="ctx-line"><span class="badge safe">없음</span> 추가로 발견한 문제가 없습니다.</p>`;
+  } else {
+    html = x.findings.map((f) => `<div class="cross-item">
+        <p class="ctx-line"><span class="badge ${sevCls[f.severity] || "info"}">${esc(f.severity)}</span>
+          <span class="badge info">${esc(f.perspective)}</span> ${esc(f.description)}</p>
+        ${f.notice_evidence ? `<p class="small"><span class="k">안내문</span> “${esc(f.notice_evidence)}”</p>` : ""}
+        ${f.page_evidence ? `<p class="small"><span class="k">페이지</span> “${esc(f.page_evidence)}”</p>` : ""}
+      </div>`).join("");
+    html += `<p class="muted small">${x.signal ? `위험 점수에 ${x.signal.points}점 반영` : "위험 점수에는 반영하지 않음 (참고용)"}</p>`;
+  }
+  if (x.dropped) html += `<p class="muted small">근거 문장을 원문에서 찾지 못한 ${x.dropped}건은 제외했습니다.</p>`;
+  $("cross-body").innerHTML = html;
 }
 
 function renderResult(d) {

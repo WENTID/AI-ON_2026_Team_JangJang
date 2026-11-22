@@ -141,7 +141,9 @@
             {"name": "목적 비교", "checks": [
               {"id": "context", "name": "QR 안내 목적과 페이지 목적 일치 여부",
                "signals": ["ai_context_mismatch", "ai_context_unclear", "sticker_context_mismatch"],
-               "requires": "context", "ok": "QR 안내 목적과 페이지 목적 일치"}
+               "requires": "context", "ok": "QR 안내 목적과 페이지 목적 일치"},
+              {"id": "cross_check", "name": "AI 교차 분석 (규칙 밖 추가 어긋남)", "signals": ["ai_cross_finding"],
+               "requires": "cross_check", "ok": "추가로 발견한 문제 없음"}
             ]},
             {"name": "QR 상태", "checks": [
               {"id": "qr_sticker", "name": "덧붙인 QR 스티커", "signals": ["qr_sticker"],

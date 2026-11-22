@@ -8,6 +8,7 @@ from urllib.parse import parse_qsl, urlsplit
 from . import ai_judge, config, hierarchy
 from .brand import brands_in_text, find_brand, find_lookalike, official_brand
 from .context import analyze_context
+from .cross_check import analyze_cross
 from .lookups import age_days
 from .page import SENSITIVE_KINDS, extract
 from .scoring import VERDICT_LABEL, make_signal, score
@@ -269,6 +270,12 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
                               ai_result=ai["result"] if fetched else None, download_name=download_name,
                               fetch_note=trace["error"] or f"HTTP {trace['status']}")
     signals.extend(context["signals"])
+    # 2차 교차 분석: 안내문 사진과 페이지를 함께 보고 위 검사들이 다루지 않은 어긋남을 찾는다. (Gemini 멀티모달)
+    cross = analyze_cross(context_image_id, context, page=page if fetched else None,
+                          ai_result=ai["result"] if fetched else None,
+                          final_domain=urlsplit(final_url).hostname or "", signals=signals, use_ai=use_ai)
+    if cross["signal"]:
+        signals.append(cross["signal"])
 
     # ---- 최종 판정 ----
     # 피싱 판정과 기타 위협은 따로 계산하고 따로 표시한다.
@@ -292,6 +299,9 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
         "whitelist": None if use_whitelist else "신뢰 목록 끔",
         "context": None if context["status"] == "ok" else context["message"],
         "notice": None if context["notice"] else (context["message"] or "안내문 사진 없음"),
+        "cross_check": cross["message"] if cross["status"] != "ok" else (
+            f"발견 {len(cross['findings'])}건, 점수 미반영 (아래 'AI가 추가로 발견한 점')"
+            if cross["findings"] and not cross["signal"] else None),
     }
     rules = hierarchy.build(verdict=verdict, phishing_verdict=phishing_verdict, risk_reasons=risk_reasons,
                             safe_reasons=final["safe_reasons"], notices=notices, unavailable=unavailable)
@@ -334,6 +344,7 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
         "notices": notices,
         "ai": ai,
         "context": context,
+        "cross_check": cross,
         "page": {"title": page["title"], "requested_info": page["requested_info"]} if page else None,
         "checks": {
             "fetch": trace["error"] or f"HTTP {trace['status']}",

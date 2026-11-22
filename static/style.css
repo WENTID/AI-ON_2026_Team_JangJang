@@ -194,3 +194,10 @@ details summary { cursor: pointer; color: var(--primary); margin: 8px 0 4px; fon
 .ctx-prob .bar i.danger { background: var(--danger); }
 .ctx-text { margin-top: 8px; font-size: .86rem; }
 .ctx-text pre { white-space: pre-wrap; background: #f7f8fb; border-radius: 10px; padding: 10px; margin: 6px 0 0; font-family: inherit; }
+
+/* AI 교차 분석 (2차) */
+.cross { margin-top: 14px; padding-top: 12px; border-top: 1px dashed #e3e6ee; }
+.cross h3 { margin: 0 0 2px; font-size: .95rem; }
+.cross-item { padding: 8px 0; border-bottom: 1px solid #f0f1f4; }
+.cross-item p { margin: 2px 0; }
+.cross-item .k { display: inline-block; min-width: 3.2em; color: var(--muted); font-size: .8rem; }

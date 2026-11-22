@@ -33,6 +33,7 @@
     "qr_sticker":             {"tier": "weak", "points": 15, "label": "QR이 덧붙인 스티커로 보임"},
     "ai_brand_claim":         {"tier": "weak", "points": 10, "label": "AI 판단: 공식 도메인이 아닌 곳에서 브랜드 표방"},
     "ai_brand_mismatch":      {"tier": "strong", "points": 35, "label": "AI 판단: 운영 주체가 아닌 도메인에서 브랜드 표방"},
+    "ai_cross_finding":       {"tier": "weak", "points": 0,  "label": "AI 교차 분석: 안내문과 페이지의 추가 어긋남", "_설명": "점수는 settings.cross_check 에서 정함(심각도별 합계, 상한). display_only 면 신호 자체가 없음"},
     "hosting_platform":       {"tier": "weak", "points": 10,  "label": "무료 호스팅·웹빌더 주소"},
 
     "trusted_site":           {"tier": "safe", "points": 40, "label": "신뢰 사이트 목록에 포함"},

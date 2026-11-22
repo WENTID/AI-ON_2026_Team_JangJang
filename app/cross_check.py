@@ -28,7 +28,7 @@ from pydantic import BaseModel, Field
 from . import ai_judge, config, notice
 from .uploads import image_path
 
-PROMPT_VERSION = 1
+PROMPT_VERSION = 2
 SEVERITIES = ["낮음", "중간", "높음"]
 
 
@@ -44,6 +44,9 @@ def _prompt(already_checked: list[str]) -> str:
 사람이 정한 검사 규칙이 이미 아래 항목을 검사했다. 이 항목들은 다시 보고하지 않는다.
 [이미 검사한 항목]
 {checked}
+특히 '안내문의 목적과 페이지의 목적이 다르다', '안내문과 무관한 개인정보·민감 정보를 요구한다'는 이미 판정했다.
+이것을 다른 말(유도 행위, 무관한 페이지 등)로 바꿔 다시 보고하지 않는다. 목적이 서로 다르더라도, 그 차이 말고
+새로 드러나는 구체적인 사실(금액·번호·날짜·기관명·문구 등)만 보고한다.
 
 그 밖에 사람이 놓치기 쉬운, 안내문과 페이지 사이의 어긋남이나 수상한 점을 찾는다.
 살펴볼 관점(힌트일 뿐, 여기에 없는 문제는 '기타'로 보고):
@@ -126,18 +129,24 @@ def _ask(image_id: str, notice_text: str, page_info: dict, already_checked: list
     if not ai_judge._limiter.acquire(ai["max_requests_per_minute"], wait=False):
         return {"status": "error", "error": "AI 요청 한도에 걸려 추가 분석 생략"}
     from google.genai import types
+    import time
     schema = _schema()
-    try:
-        resp = ai_judge._get_client().models.generate_content(
-            model=ai["model"],
-            contents=[types.Part.from_bytes(data=data, mime_type="image/jpeg"),
-                      json.dumps(payload, ensure_ascii=False)],
-            config=types.GenerateContentConfig(
-                system_instruction=_prompt(already_checked), response_mime_type="application/json",
-                response_schema=schema, temperature=0, seed=ai.get("seed", 0), candidate_count=1))
-        result = schema.model_validate_json(resp.text).model_dump(mode="json")
-    except Exception as e:  # noqa: BLE001
-        return {"status": "error", "error": f"추가 분석 실패 ({type(e).__name__})"}
+    for attempt in range(2):  # 서버 과부하(5xx)·시간 초과 같은 일시 오류는 한 번 더 시도
+        try:
+            resp = ai_judge._get_client().models.generate_content(
+                model=ai["model"],
+                contents=[types.Part.from_bytes(data=data, mime_type="image/jpeg"),
+                          json.dumps(payload, ensure_ascii=False)],
+                config=types.GenerateContentConfig(
+                    system_instruction=_prompt(already_checked), response_mime_type="application/json",
+                    response_schema=schema, temperature=0, seed=ai.get("seed", 0), candidate_count=1))
+            result = schema.model_validate_json(resp.text).model_dump(mode="json")
+            break
+        except Exception as e:  # noqa: BLE001
+            if attempt == 0 and ai_judge._is_temporary(e):
+                time.sleep(2)
+                continue
+            return {"status": "error", "error": f"추가 분석 실패 ({type(e).__name__})"}
     out = {"status": "ok", "findings": result["findings"][: _cfg()["max_findings"]]}
     cache.parent.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(out, ensure_ascii=False), encoding="utf-8")

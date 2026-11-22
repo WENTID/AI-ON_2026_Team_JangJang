@@ -49,7 +49,10 @@ def ask(state, questions: dict, *, images: dict[str, bytes] | None = None, cache
     if cache and path.exists():
         return {**json.loads(path.read_text(encoding="utf-8")), "cached": True}
 
-    import typesafe_sdk as ts
+    try:
+        import typesafe_sdk as ts
+    except ImportError:  # SDK가 설치되지 않은 환경에서도 나머지 분석은 계속
+        return {"status": "error", "error": "Jev SDK 미설치 (pip install -r requirements.txt)"}
     kwargs = {}
     if images:
         kwargs["assets"] = {k: ts.Image(v) for k, v in images.items()}

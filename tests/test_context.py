@@ -127,9 +127,33 @@ def test_demo_case_url_safe_but_context_catches(fake_ai):
     plain = analyze(snap, use_ai=False)
     assert plain["verdict"] == "safe" and plain["safe_level"] == "minor"
     with_ctx = analyze(snap, use_ai=False, context_image_id="img1")
-    assert with_ctx["verdict"] == "caution" and with_ctx["top_rule"]["id"] == "qr_source"
+    assert with_ctx["verdict"] == "caution" and with_ctx["top_rule"]["id"] == "ai_analysis"
+    assert "목적이 다릅니다" in with_ctx["one_liner"]
     checks = {k["id"]: k for c in with_ctx["report"] for s in c["sections"] for k in s["checks"]}
     assert checks["context"]["status"] == "danger" and checks["qr_sticker"]["status"] == "safe"
+
+
+def test_sticker_only_one_liner_is_not_purpose_mismatch(fake_ai):
+    """스티커만 걸리고 목적은 일치할 때 '목적이 다르다'는 대표 문구가 나오면 안 된다. (11/23 버그)"""
+    fake_ai["notice"] = {**PARKING_NOTICE, "sticker_suspected": True}
+    fake_ai["p"] = 0.05
+    snap = fake_snapshot("https://qr-demo.onrender.com/demo-site/event", EVENT_HTML, created="2024-01-01T00:00:00Z")
+    snap["cert"] = {"checked": True, "valid": True, "kind": None, "error": None}
+    r = analyze(snap, use_ai=False, context_image_id="img1")
+    assert "목적이 다릅니다" not in r["one_liner"] and "스티커" in r["one_liner"]
+
+
+def test_failed_context_shows_unknown_not_na(fake_ai):
+    """목적 비교를 하려다 실패하면(Jev·Gemini 모두 실패) '해당 없음'이 아니라 '확인 불가'."""
+    fake_ai["jev_error"] = True
+    import app.context as ctx_mod
+    ctx_mod._gemini_match = lambda st: {"status": "error", "error": "Gemini 사용 불가"}
+    snap = fake_snapshot("https://qr-demo.onrender.com/demo-site/event", EVENT_HTML, created="2024-01-01T00:00:00Z")
+    r = analyze(snap, use_ai=False, context_image_id="img1")
+    checks = {k["id"]: k for c in r["report"] for s in c["sections"] for k in s["checks"]}
+    cats = {c["id"]: c for c in r["report"]}
+    assert checks["context"]["status"] == "unknown"
+    assert cats["ai_analysis"]["status"] == "unknown"  # 대분류에서도 실패가 '안전'에 가려지지 않음
 
 
 # ---------- 맥락 분석 생략 기준 (QR 면적 비율) ----------

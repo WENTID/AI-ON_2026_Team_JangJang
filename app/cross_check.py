@@ -125,9 +125,11 @@ def _ask(image_id: str, notice_text: str, page_info: dict, already_checked: list
         return {**json.loads(cache.read_text(encoding="utf-8")), "cached": True}
     if not config.env("GEMINI_API_KEY"):
         return {"status": "error", "error": "Gemini API 키 없음"}
-    # 실시간 분석이라 한도에 걸리면 기다리지 않고 생략한다.
-    if not ai_judge._limiter.acquire(ai["max_requests_per_minute"], wait=False):
-        return {"status": "error", "error": "AI 요청 한도에 걸려 추가 분석 생략"}
+    # 우선순위가 가장 낮은 호출이라, 분당 한도 중 reserve_requests 만큼은 남겨 둔다.
+    # (다음 검사의 안내문 읽기·사칭 판별·목적 비교 대체 판정이 밀리지 않게) 남은 한도가 적으면 기다리지 않고 건너뛴다.
+    limit = ai["max_requests_per_minute"] - _cfg().get("reserve_requests", 4)
+    if limit <= 0 or not ai_judge._limiter.acquire(limit, wait=False):
+        return {"status": "busy", "error": "AI 요청이 몰려 추가 분석은 건너뜀 (사칭 판별·목적 비교 우선)"}
     from google.genai import types
     import time
     schema = _schema()
@@ -197,7 +199,7 @@ def analyze_cross(image_id: str | None, context: dict, *, page: dict | None, ai_
 
     res = _ask(image_id, context["notice"]["text"], page_info, already)
     if res["status"] != "ok":
-        return _empty("error", res["error"])
+        return _empty("skipped" if res["status"] == "busy" else "error", res["error"])
     kept, dropped = verify(res["findings"], context["notice"]["text"], page_text)
     order = {s: i for i, s in enumerate(reversed(SEVERITIES))}
     kept.sort(key=lambda f: order[f["severity"]])

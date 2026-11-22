@@ -124,6 +124,7 @@ main { max-width: 480px; margin: 0 auto; padding: 12px 12px 32px; }
 .badge.safe { background: var(--safe-bg); color: var(--safe); }
 .badge.na, .badge.info { background: #f0f1f4; color: var(--muted); }
 .badge.phase2 { background: #eef1ff; color: var(--primary); }
+.badge.unknown { background: #fff1f0; color: #b4483c; border: 1px dashed #e6a29a; }
 
 .block { border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; margin-bottom: 12px; }
 .block h2 { font-size: 1.02rem; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }

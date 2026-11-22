@@ -10,6 +10,7 @@
     "  requires = 이 검사를 할 수 있는 조건(analyzer.py 의 checks_available). 조건이 안 되면 '해당 없음/확인 불가'로 표시.",
     "  ok = 걸린 신호가 없을 때 보여 줄 문구.",
     "actions: 이 수칙이 대표 수칙으로 뽑혔을 때 판정별 행동 안내. 없으면 범죄유형의 default_actions 를 쓴다.",
+    "검사 항목에 one_liner / actions 가 있으면, 그 항목의 신호가 대표 근거일 때 수칙의 것 대신 쓴다. (예: 스티커만 걸렸는데 '목적이 다르다'고 나오지 않게)",
     "2단계에서 QR 분석기로 넓힐 때는 crime_types 에 범죄유형(예: 악성 앱 설치 유도, 결제 사기)을 추가한다."
   ],
   "crime_types": [
@@ -28,16 +29,38 @@
           "kind": "risk",
           "short": "AI 분석",
           "icon": "ai",
-          "title": "공식 기관·회사를 사칭하는 페이지 주의 (AI 판별)",
-          "one_liner": "유명 서비스를 내세우지만 운영 주체의 사이트가 아닙니다.",
+          "title": "사칭 페이지·안내문과 다른 QR 주의 (AI 판별)",
+          "one_liner": "AI 분석에서 의심스러운 점이 발견되었습니다.",
           "actions": {
-            "danger": "아이디·비밀번호·카드번호를 입력하지 마세요.",
-            "caution": "공식 앱으로 접속하세요."
+            "danger": "접속하지 말고, 개인정보를 입력하지 마세요.",
+            "caution": "공식 앱이나 안내문의 기관을 통해 확인하세요."
           },
           "sections": [
             {"name": "사칭 판별", "checks": [
               {"id": "ai_impersonation", "name": "AI 사칭 판별 (페이지가 내세우는 서비스 vs 실제 도메인)",
-               "signals": ["ai_impersonation", "ai_brand_mismatch", "ai_brand_claim"], "requires": "ai", "ok": "사칭 의심 없음"}
+               "signals": ["ai_impersonation", "ai_brand_mismatch", "ai_brand_claim"], "requires": "ai", "ok": "사칭 의심 없음",
+               "one_liner": "유명 서비스를 내세우지만 운영 주체의 사이트가 아닙니다.",
+               "actions": {"danger": "아이디·비밀번호·카드번호를 입력하지 마세요.", "caution": "공식 앱으로 접속하세요."}}
+            ]},
+            {"name": "QR 안내문 비교", "checks": [
+              {"id": "context", "name": "QR 안내 목적과 페이지 목적 일치 여부",
+               "signals": ["ai_context_mismatch", "ai_context_unclear", "sticker_context_mismatch"],
+               "requires": "context", "ok": "QR 안내 목적과 페이지 목적 일치",
+               "one_liner": "QR 안내문의 목적과 실제 페이지의 목적이 다릅니다.",
+               "actions": {"danger": "덧붙인 스티커인지 살펴보고, 안내문의 기관에 직접 문의하세요.",
+                           "caution": "안내문의 기관에 직접 확인하세요.",
+                           "safe": "안내문과 다른 정보를 요구하면 입력하지 마세요."}},
+              {"id": "cross_check", "name": "AI 교차 분석 (규칙 밖 추가 어긋남)", "signals": ["ai_cross_finding"],
+               "requires": "cross_check", "ok": "추가로 발견한 문제 없음",
+               "one_liner": "QR 안내문과 실제 페이지의 내용이 서로 어긋납니다.",
+               "actions": {"danger": "안내문의 기관에 직접 문의하세요.", "caution": "안내문의 기관에 직접 확인하세요.",
+                           "safe": "안내문과 다른 내용(금액·연락처 등)이 보이면 입력하지 마세요."}},
+              {"id": "qr_sticker", "name": "덧붙인 QR 스티커", "signals": ["qr_sticker"],
+               "requires": "notice", "ok": "덧붙인 스티커 흔적 없음",
+               "one_liner": "QR코드가 원래 인쇄된 것이 아니라 덧붙인 스티커로 보입니다.",
+               "actions": {"danger": "스티커 QR은 찍지 말고, 안내문의 기관에 직접 문의하세요.",
+                           "caution": "스티커 QR은 찍지 말고, 안내문의 기관에 직접 문의하세요.",
+                           "safe": "덧붙인 스티커인지 살펴보고, 의심되면 찍지 마세요."}}
             ]}
           ]
         },
@@ -122,32 +145,6 @@
                "ok": "파일 다운로드로 연결되지 않음"},
               {"id": "malware_db", "name": "악성코드 DB 조회", "notices": ["malware_db"], "requires": "db",
                "ok": "악성·원치 않는 소프트웨어 목록에 없음"}
-            ]}
-          ]
-        },
-        {
-          "id": "qr_source",
-          "kind": "risk",
-          "short": "QR 출처",
-          "icon": "qr",
-          "title": "출처가 불분명한 QR 주의 (덧붙인 스티커 등)",
-          "one_liner": "QR 안내문의 목적과 실제 페이지의 목적이 다릅니다.",
-          "actions": {
-            "danger": "덧붙인 스티커인지 살펴보고, 안내문의 기관에 직접 문의하세요.",
-            "caution": "덧붙인 스티커인지 살펴보고, 안내문의 기관에 직접 문의하세요.",
-            "safe": "안내문과 다른 정보를 요구하면 입력하지 마세요."
-          },
-          "sections": [
-            {"name": "목적 비교", "checks": [
-              {"id": "context", "name": "QR 안내 목적과 페이지 목적 일치 여부",
-               "signals": ["ai_context_mismatch", "ai_context_unclear", "sticker_context_mismatch"],
-               "requires": "context", "ok": "QR 안내 목적과 페이지 목적 일치"},
-              {"id": "cross_check", "name": "AI 교차 분석 (규칙 밖 추가 어긋남)", "signals": ["ai_cross_finding"],
-               "requires": "cross_check", "ok": "추가로 발견한 문제 없음"}
-            ]},
-            {"name": "QR 상태", "checks": [
-              {"id": "qr_sticker", "name": "덧붙인 QR 스티커", "signals": ["qr_sticker"],
-               "requires": "notice", "ok": "덧붙인 스티커 흔적 없음"}
             ]}
           ]
         },

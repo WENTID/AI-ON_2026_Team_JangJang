@@ -70,6 +70,8 @@
     "max_points": 15,
     "max_findings": 3,
     "page_text_chars": 1500,
+    "_reserve_설명": "교차 분석은 우선순위가 가장 낮다. Gemini 분당 한도(ai.max_requests_per_minute) 중 reserve_requests 만큼은 남겨 두고, 남은 한도가 그보다 적으면 건너뛴다. (사칭 판별·안내문 읽기·목적 비교 대체 판정 우선)",
+    "reserve_requests": 4,
     "perspectives": [
       {"name": "금액·요금", "hint": "안내문에 적힌 금액·요금과 페이지가 요구하는 금액이 다른지"},
       {"name": "기관·사업자", "hint": "안내문을 붙인 기관·가게와 페이지의 운영자·사업자 정보가 다른지"},

@@ -248,7 +248,8 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
     elif trusted:
         ai["message"] = "신뢰 사이트라 AI 분석 생략"
     elif not page or not (page["title"] or page["text"]):
-        ai["message"] = "분석할 페이지 내용이 없음"
+        ai["message"] = "분석할 페이지 내용이 없음" + (f" (접속 결과: {trace['error'] or 'HTTP ' + str(trace['status'])})"
+                                                   if trace["error"] or (trace["status"] or 0) >= 400 else "")
     elif pre["score"] >= settings["ai"]["skip_if_rule_score_at_least"]:
         ai["message"] = "규칙 점수만으로 위험이 확실해 AI 분석 생략"
     else:
@@ -303,8 +304,20 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
             f"발견 {len(cross['findings'])}건, 점수 미반영 (아래 'AI가 추가로 발견한 점')"
             if cross["findings"] and not cross["signal"] else None),
     }
+    # 위 항목 중 '하려 했지만 실패한' 것 → 화면에 '확인 불가'(나머지는 '해당 없음')
+    failed = {k for k, bad in {
+        "db": use_db and unavailable["db"] is not None,
+        "domain_age": age is None,
+        "ai": ai["status"] not in ("ok", "skipped") or (ai["status"] == "skipped" and not fetched and use_ai),
+        "page": page is None and not fetched,
+        "cert": not is_http and not snap["cert"].get("checked"),
+        "context": context["status"] == "error",
+        "notice": bool(context.get("notice_status")),
+        "cross_check": cross["status"] == "error",
+    }.items() if bad and unavailable.get(k)}
     rules = hierarchy.build(verdict=verdict, phishing_verdict=phishing_verdict, risk_reasons=risk_reasons,
-                            safe_reasons=final["safe_reasons"], notices=notices, unavailable=unavailable)
+                            safe_reasons=final["safe_reasons"], notices=notices, unavailable=unavailable,
+                            failed=failed)
     th = final["breakdown"]["thresholds"]
     level = safe_level(final["score"], th) if phishing_verdict == "safe" else None
     action, one_liner = rules["action"], rules["one_liner"]

@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 
 from . import ai_judge, config, jev, notice
 from .scoring import make_signal
-from .uploads import UPLOAD_DIR, image_path  # noqa: F401  (main.py 가 UPLOAD_DIR 을 여기서 가져다 씀)
+from .uploads import UPLOAD_DIR, image_path, load_meta  # noqa: F401  (main.py 가 UPLOAD_DIR 을 여기서 가져다 씀)
 
 QUESTION = {
     "type": "choice",
@@ -128,7 +128,7 @@ def analyze_context(image_id: str | None, *, page: dict | None = None, ai_result
                     download_name: str | None = None, fetch_note: str | None = None) -> dict:
     """QR 안내문과 접속 페이지의 목적이 맞는지 판정한다. 실패해도 예외 없이 status 로 알린다.
 
-    반환: status(ok/no_context/unreadable/error), message, notice(안내문 읽기 결과), notice_purpose, page_purpose,
+    반환: status(ok/no_context/qr_only/unreadable/error), message, notice(안내문 읽기 결과), notice_purpose, page_purpose,
           decision(일치/불일치/판단불가), p_mismatch(불일치 확률), engine(Jev/Gemini), signals(점수 신호 목록)
     """
     cfg = config.settings()["context"]
@@ -136,6 +136,11 @@ def analyze_context(image_id: str | None, *, page: dict | None = None, ai_result
         return _empty("no_context", "비교할 QR 안내문 사진 없음 (링크 직접 입력 또는 사진 없음)")
     if not cfg["enabled"]:
         return _empty("error", "맥락 비교 꺼짐")
+    # 생략 기준 1단계: QR이 사진의 대부분을 차지하면 안내문이 없는 사진으로 보고 비교하지 않는다. (Gemini 호출 없음)
+    # 2단계는 아래 안내문 읽기 결과(글자 수·readable)로 거른다.
+    ratio = load_meta(image_id).get("qr_ratio")
+    if ratio is not None and ratio >= cfg["skip_qr_ratio"]:
+        return _empty("qr_only", f"QR만 가까이 찍힌 사진이라 안내문 비교를 생략함 (QR이 화면의 {ratio:.0%})")
 
     read = notice.read_notice(image_id)
     out = _empty("error", "")

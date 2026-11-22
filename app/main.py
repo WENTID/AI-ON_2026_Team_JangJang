@@ -14,8 +14,8 @@ from pydantic import BaseModel
 
 from . import config, hierarchy, jev, notice
 from .analyzer import analyze
-from .qr_decode import decode_image
-from .uploads import UPLOAD_DIR
+from .qr_decode import decode_image, qr_area_ratio
+from .uploads import UPLOAD_DIR, save_meta
 from .snapshot import collect
 from .urls import InvalidUrl, normalize_input
 
@@ -83,8 +83,13 @@ async def api_image(file: UploadFile = File(...), decode: bool = Form(True)):
     image_id = uuid.uuid4().hex
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     cv2.imwrite(str(UPLOAD_DIR / f"{image_id}.jpg"), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
-    # 안내문 읽기(Gemini)를 지금 시작해 두면, 곧이어 오는 분석 요청에서 기다리는 시간이 줄어든다.
-    notice.prefetch(image_id)
+    # QR만 가까이 찍은 사진(QR 면적 비율이 큼)은 안내문이 없다고 보고 안내문 읽기(Gemini)를 하지 않는다.
+    # 애매하면 Gemini가 읽어 본 결과(글자 수·readable)로 다시 거른다. (context.analyze_context)
+    ratio = qr_area_ratio(img)
+    save_meta(image_id, {"qr_ratio": ratio})
+    if ratio is None or ratio < config.settings()["context"]["skip_qr_ratio"]:
+        # 안내문 읽기를 지금 시작해 두면, 곧이어 오는 분석 요청에서 기다리는 시간이 줄어든다.
+        notice.prefetch(image_id)
 
     codes = []
     if decode:

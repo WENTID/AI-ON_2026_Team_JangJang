@@ -259,7 +259,7 @@ $("only-issues").addEventListener("change", renderReport);
 // ---------- QR 목적 비교 (안내문 사진 vs 실제 페이지) ----------
 function renderContext(d) {
   const c = d.context;
-  $("ctx-notice").textContent = c.notice_purpose || (c.status === "no_context" ? "사진 없음" : "읽지 못함");
+  $("ctx-notice").textContent = c.notice_purpose || ({ no_context: "사진 없음", qr_only: "QR만 찍힘" }[c.status] || "읽지 못함");
   $("ctx-page").textContent = c.page_purpose || (d.ai.result ? d.ai.result.page_purpose : "-");
   let html;
   if (c.status === "ok") {

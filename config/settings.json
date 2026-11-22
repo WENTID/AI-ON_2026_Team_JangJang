@@ -57,7 +57,9 @@
     "gemini_fallback": true,
     "jev_image_fallback": true,
     "jev_sticker_threshold": 0.8,
-    "page_text_chars": 600
+    "page_text_chars": 600,
+    "_생략_설명": "QR이 사진에서 차지하는 면적 비율이 skip_qr_ratio 이상이면 QR만 찍은 사진으로 보고 안내문 읽기·비교를 생략한다. 애매하면 Gemini 읽기 결과(notice.min_chars)로 다시 거른다. 시연 포스터 7~9%, 글자 있는 QR 이미지 18~22% 측정(11/22). 실제 사진으로 다시 정할 것",
+    "skip_qr_ratio": 0.35
   },
   "screenshot": {
     "enabled": false

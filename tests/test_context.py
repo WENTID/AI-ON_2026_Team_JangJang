@@ -130,3 +130,25 @@ def test_demo_case_url_safe_but_context_catches(fake_ai):
     assert with_ctx["verdict"] == "caution" and with_ctx["top_rule"]["id"] == "qr_source"
     checks = {k["id"]: k for c in with_ctx["report"] for s in c["sections"] for k in s["checks"]}
     assert checks["context"]["status"] == "danger" and checks["qr_sticker"]["status"] == "safe"
+
+
+# ---------- 맥락 분석 생략 기준 (QR 면적 비율) ----------
+def test_qr_only_photo_skips_context(fake_ai, monkeypatch):
+    calls = []
+    monkeypatch.setattr(notice, "read_notice", lambda image_id: calls.append(image_id) or {"status": "ok", "result": PARKING_NOTICE})
+    monkeypatch.setattr(context, "load_meta", lambda image_id: {"qr_ratio": 0.6})
+    r = context.analyze_context("img1", page={"title": "t", "text": "x"})
+    assert r["status"] == "qr_only" and r["signals"] == [] and calls == []  # Gemini 안내문 읽기도 안 함
+    monkeypatch.setattr(context, "load_meta", lambda image_id: {"qr_ratio": 0.09})
+    assert context.analyze_context("img1", page={"title": "t", "text": "x"})["status"] == "ok"
+
+
+def test_qr_area_ratio():
+    import cv2
+    from app.qr_decode import qr_area_ratio
+    qr = cv2.resize(cv2.QRCodeEncoder.create().encode("https://example.com/pay"), None, fx=10, fy=10,
+                    interpolation=cv2.INTER_NEAREST)
+    close = cv2.copyMakeBorder(qr, 20, 20, 60, 60, cv2.BORDER_CONSTANT, value=255)   # QR만 가까이
+    poster = cv2.copyMakeBorder(qr, 400, 400, 300, 300, cv2.BORDER_CONSTANT, value=255)  # 큰 안내문 속 QR
+    assert qr_area_ratio(close) > 0.35 > qr_area_ratio(poster) > 0
+    assert qr_area_ratio(cv2.copyMakeBorder(qr[:5, :5], 0, 0, 0, 0, cv2.BORDER_CONSTANT)) is None

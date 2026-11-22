@@ -41,3 +41,41 @@ def decode_image(data: bytes) -> list[str]:
                 except cv2.error:
                     pass
     return found
+
+
+def qr_area_ratio(img) -> float | None:
+    """사진에서 QR코드가 차지하는 면적 비율(0~1). QR을 못 찾으면 None.
+
+    맥락 분석 생략 판단용: QR만 가까이 찍은 사진은 비율이 크고, 안내문과 함께 찍은 사진은 작다.
+    QR이 여러 개면 가장 큰 것 기준. 비율이라 사진 크기를 줄여 찾아도 값은 같다.
+    """
+    if img is None:
+        return None
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) if img.ndim == 3 else img
+    h, w = gray.shape
+    if max(h, w) > 1600:  # 큰 사진은 줄여서 찾는다 (속도)
+        scale = 1600 / max(h, w)
+        gray = cv2.resize(gray, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+        h, w = gray.shape
+    best = None
+    for det in [cv2.QRCodeDetector()] + ([cv2.QRCodeDetectorAruco()] if hasattr(cv2, "QRCodeDetectorAruco") else []):
+        try:
+            ok, points = det.detectMulti(gray)
+        except cv2.error:
+            ok, points = False, None
+        if not ok or points is None:
+            try:
+                ok, points = det.detect(gray)
+                points = None if not ok or points is None else points.reshape(1, 4, 2)
+            except cv2.error:
+                points = None
+        if points is None:
+            continue
+        for quad in points:
+            area = abs(cv2.contourArea(quad.reshape(4, 2).astype(np.float32)))
+            ratio = area / float(h * w)
+            if ratio > 0 and (best is None or ratio > best):
+                best = ratio
+        if best is not None:
+            break
+    return None if best is None else round(min(best, 1.0), 4)

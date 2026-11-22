@@ -237,7 +237,8 @@ function renderReport() {
         checks.forEach((k) => {
           const key = `${c.id}/${k.id}`;
           html += `<button class="check" data-check="${key}" aria-expanded="${openCheck === key}">
-            <span class="check-name">${esc(k.name)}</span>${badge(k.status)}</button>`;
+            <span class="check-name">${esc(k.name)}${k.status === "unknown"
+              ? `<span class="check-why">${esc(k.summary)}</span>` : ""}</span>${badge(k.status)}</button>`;
           if (openCheck === key) html += checkDetail(k);
         });
       });
@@ -322,6 +323,12 @@ function renderResult(d) {
   $("mark-danger").style.left = `${rd.danger}%`;
   $("risk-scale").innerHTML = `<span style="width:${rd.caution}%">낮음</span><span style="width:${rd.danger - rd.caution}%">경고 ${rd.caution}</span><span>위험 ${rd.danger}</span>`;
   $("one-liner").textContent = d.card_line;  // 한 줄 설명: 근거 + 할 일
+  // 하려 했지만 실패한 검사가 있으면 사유를 문장으로 보여 준다. (안전 판정이 실제보다 안전해 보이지 않게)
+  const fails = d.failures || [];
+  $("fail-note").hidden = !fails.length;
+  $("fail-note").innerHTML = fails.length ? `<p class="fail-title">일부 검사를 하지 못했어요${
+      d.verdict === "safe" ? " · 결과가 실제보다 안전하게 보일 수 있어요" : ""}</p>
+    <ul>${fails.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>` : "";
   $("more").open = false;
 
   // 점검 결과 트리: 문제가 있는 대분류만 처음부터 펼쳐 둔다.

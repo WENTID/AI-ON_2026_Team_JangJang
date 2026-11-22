@@ -107,6 +107,33 @@ def safe_level(score_value: int, thresholds: dict) -> str:
     return "check" if score_value >= thresholds.get("check", 15) else "minor"
 
 
+# 실패한 검사 → 결과 카드에 보여 줄 문장. {사유}에는 analyzer 가 모은 실패 이유가 들어간다.
+FAILURE_TEXT = {
+    "page": "페이지에 접속하지 못해 페이지 내용·AI 검사를 하지 못했어요 ({사유})",
+    "ai": "AI 사칭 판별을 하지 못했어요 ({사유})",
+    "notice": "QR 안내문 사진을 읽지 못했어요 ({사유})",
+    "context": "QR 안내문과 페이지의 목적을 비교하지 못했어요 ({사유})",
+    "cross_check": "AI 교차 분석을 하지 못했어요 ({사유})",
+    "db": "피싱 DB를 조회하지 못했어요",
+    "domain_age": "도메인 등록일을 확인하지 못했어요",
+    "cert": "인증서를 확인하지 못했어요",
+}
+
+
+def failure_messages(failed: set, unavailable: dict, trace: dict, fetched: bool) -> list[str]:
+    """실패한 검사의 사유를 문장으로. 페이지 접속 실패면 그 때문에 못 한 AI 검사(사칭 판별·목적 비교·교차 분석)는
+    한 문장으로 묶는다. (같은 원인을 여러 번 말하지 않게)"""
+    out = []
+    if not fetched:
+        reason = trace["error"] or f"HTTP {trace['status']}"
+        out.append(FAILURE_TEXT["page"].format(사유=reason))
+    for key in ("notice", "ai", "context", "cross_check", "db", "domain_age", "cert"):
+        if key not in failed or (not fetched and key in ("ai", "context", "cross_check")):
+            continue
+        out.append(FAILURE_TEXT[key].format(사유=unavailable.get(key) or "알 수 없는 오류"))
+    return out
+
+
 def headline(phishing_verdict: str, malware: bool, notice_count: int, download: bool = False,
              level: str = "none") -> dict:
     """결과 화면 맨 위 문구. 피싱 판정과 기타 위협(악성코드 등)을 섞지 않는다.
@@ -328,6 +355,7 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
     # 결과 카드는 두 칸만: 단어 요약(위협 종류 + 등급) / 한 줄 설명(근거 + 할 일)
     summary = SAFE_LEVELS[level]["label"] if verdict == "safe" else f"{head['kind']} {VERDICT_LABEL[verdict]}"
     card_line = " ".join(x for x in (one_liner, action) if x)
+    failures = failure_messages(failed, unavailable, trace, fetched)
 
     return {
         "input_url": input_url,
@@ -341,6 +369,8 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
         "headline": head,
         "summary": summary,
         "card_line": card_line,
+        # 하려 했지만 실패한 검사의 사유를 사람이 읽는 문장으로 (결과 카드에 표시). 없으면 빈 목록
+        "failures": failures,
         "score": final["score"],
         # 화면 표시용 위험도: 100점 만점으로 자른다. (판정은 원점수 score 로 이미 끝났으므로 영향 없음)
         "risk_display": {"value": min(final["score"], 100), "max": 100,

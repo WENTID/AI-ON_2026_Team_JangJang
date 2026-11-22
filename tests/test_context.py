@@ -154,6 +154,20 @@ def test_failed_context_shows_unknown_not_na(fake_ai):
     cats = {c["id"]: c for c in r["report"]}
     assert checks["context"]["status"] == "unknown"
     assert cats["ai_analysis"]["status"] == "unknown"  # 대분류에서도 실패가 '안전'에 가려지지 않음
+    # 결과 카드에 실패 사유 문장
+    assert any("목적을 비교하지 못했어요" in f for f in r["failures"])
+
+
+def test_fetch_failure_message_groups_ai_checks():
+    """페이지 접속 실패면 AI 검사들을 따로 말하지 않고 '접속하지 못해…' 한 문장으로 묶는다."""
+    from app.analyzer import failure_messages
+    trace = {"error": "도메인을 찾을 수 없음 (x.example)", "status": None}
+    msgs = failure_messages({"ai", "context", "cross_check", "domain_age"},
+                            {"ai": "분석할 페이지 내용이 없음", "context": "페이지 없음", "cross_check": "x",
+                             "domain_age": "도메인 등록일 확인 불가"}, trace, fetched=False)
+    assert msgs[0] == "페이지에 접속하지 못해 페이지 내용·AI 검사를 하지 못했어요 (도메인을 찾을 수 없음 (x.example))"
+    assert msgs[1:] == ["도메인 등록일을 확인하지 못했어요"]
+    assert failure_messages(set(), {}, {"error": None, "status": 200}, fetched=True) == []
 
 
 # ---------- 맥락 분석 생략 기준 (QR 면적 비율) ----------

@@ -125,6 +125,12 @@ main { max-width: 480px; margin: 0 auto; padding: 12px 12px 32px; }
 .badge.na, .badge.info { background: #f0f1f4; color: var(--muted); }
 .badge.phase2 { background: #eef1ff; color: var(--primary); }
 .badge.unknown { background: #fff1f0; color: #b4483c; border: 1px dashed #e6a29a; }
+/* 실패한 검사 사유 (결과 카드·점검 결과 트리) */
+.fail-note { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: #fff7f5; border: 1px dashed #e6a29a; color: #6b3a33; font-size: .86rem; word-break: keep-all; }
+.fail-note .fail-title { margin: 0 0 4px; font-weight: 700; color: #b4483c; }
+.fail-note ul { margin: 0; padding-left: 18px; }
+.fail-note li { margin: 2px 0; }
+.check-why { display: block; margin-top: 2px; font-size: .78rem; color: #b4483c; font-weight: 400; }
 
 .block { border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; margin-bottom: 12px; }
 .block h2 { font-size: 1.02rem; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }

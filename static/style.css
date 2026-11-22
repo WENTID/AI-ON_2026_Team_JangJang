@@ -123,6 +123,7 @@ main { max-width: 480px; margin: 0 auto; padding: 12px 12px 32px; }
 .badge.caution { background: var(--caution-bg); color: #a86a00; }
 .badge.safe { background: var(--safe-bg); color: var(--safe); }
 .badge.na, .badge.info { background: #f0f1f4; color: var(--muted); }
+.badge.blank { background: transparent; color: var(--muted); min-width: 2.4em; text-align: center; }
 .badge.phase2 { background: #eef1ff; color: var(--primary); }
 .badge.unknown { background: #fff1f0; color: #b4483c; border: 1px dashed #e6a29a; }
 /* 실패한 검사 사유 (결과 카드·점검 결과 트리) */

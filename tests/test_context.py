@@ -177,8 +177,18 @@ def test_qr_only_photo_skips_context(fake_ai, monkeypatch):
     monkeypatch.setattr(context, "load_meta", lambda image_id: {"qr_ratio": 0.6})
     r = context.analyze_context("img1", page={"title": "t", "text": "x"})
     assert r["status"] == "qr_only" and r["signals"] == [] and calls == []  # Gemini 안내문 읽기도 안 함
-    monkeypatch.setattr(context, "load_meta", lambda image_id: {"qr_ratio": 0.09})
+    monkeypatch.setattr(context, "load_meta", lambda image_id: {"qr_ratio": 0.45})  # 포스터 QR에 가까이 댄 촬영은 비교함
     assert context.analyze_context("img1", page={"title": "t", "text": "x"})["status"] == "ok"
+
+
+def test_simple_qr_leaves_context_results_blank(fake_ai, monkeypatch):
+    """단순 QR(60% 이상)이면 안내문 관련 검사(목적 비교·교차 분석·스티커)는 '-'로 비워 두고, 실패로 보지 않는다."""
+    monkeypatch.setattr(context, "load_meta", lambda image_id: {"qr_ratio": 0.8})
+    snap = fake_snapshot("https://qr-demo.onrender.com/demo-site/event", EVENT_HTML, created="2024-01-01T00:00:00Z")
+    r = analyze(snap, use_ai=False, context_image_id="img1")
+    checks = {k["id"]: k for c in r["report"] for s in c["sections"] for k in s["checks"]}
+    assert [checks[k]["status"] for k in ("context", "cross_check", "qr_sticker")] == ["blank"] * 3
+    assert not any("안내문" in f for f in r["failures"])
 
 
 def test_qr_area_ratio():
@@ -186,7 +196,13 @@ def test_qr_area_ratio():
     from app.qr_decode import qr_area_ratio
     qr = cv2.resize(cv2.QRCodeEncoder.create().encode("https://example.com/pay"), None, fx=10, fy=10,
                     interpolation=cv2.INTER_NEAREST)
-    close = cv2.copyMakeBorder(qr, 20, 20, 60, 60, cv2.BORDER_CONSTANT, value=255)   # QR만 가까이
+    from app import config
+    limit = config.settings()["context"]["skip_qr_ratio"]
+    ys, xs = (qr < 128).nonzero()  # 흰 여백을 잘라 QR만 화면 가득 찍은 것처럼
+    tight = qr[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+    close = cv2.copyMakeBorder(tight, 12, 12, 12, 12, cv2.BORDER_CONSTANT, value=255)  # 단순 QR (생략)
+    near = cv2.copyMakeBorder(tight, 60, 60, 60, 60, cv2.BORDER_CONSTANT, value=255)  # 포스터 QR에 가까이 댐 (비교함)
     poster = cv2.copyMakeBorder(qr, 400, 400, 300, 300, cv2.BORDER_CONSTANT, value=255)  # 큰 안내문 속 QR
-    assert qr_area_ratio(close) > 0.35 > qr_area_ratio(poster) > 0
+    assert qr_area_ratio(close) >= limit > qr_area_ratio(near) > qr_area_ratio(poster) > 0
+    assert qr_area_ratio(near) > 0.35  # 예전 기준(35%)이었으면 생략됐을 촬영
     assert qr_area_ratio(cv2.copyMakeBorder(qr[:5, :5], 0, 0, 0, 0, cv2.BORDER_CONSTANT)) is None

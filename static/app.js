@@ -183,7 +183,7 @@ function sourceTag(source) {
 }
 
 // ---------- 점검 결과 트리: 대분류(예방 수칙) > 중분류 > 검사 항목 ----------
-const STATUS_LABEL = { danger: "위험", caution: "경고", safe: "안전", unknown: "확인 불가", na: "해당 없음", phase2: "2단계", info: "참고" };
+const STATUS_LABEL = { danger: "위험", caution: "경고", safe: "안전", unknown: "확인 불가", na: "해당 없음", blank: "-", phase2: "2단계", info: "참고" };
 const CAT_ICONS = {
   globe: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.8 2.5 15.2 0 18M12 3c-2.5 2.8-2.5 15.2 0 18"/></svg>',
   form: '<svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
@@ -214,7 +214,7 @@ function checkDetail(c) {
 function renderReport() {
   const d = lastResult;
   const only = $("only-issues").checked;
-  const cnt = { danger: 0, caution: 0, safe: 0, unknown: 0, na: 0, phase2: 0 };
+  const cnt = { danger: 0, caution: 0, safe: 0, unknown: 0, na: 0, blank: 0, phase2: 0 };
   d.report.filter((c) => c.kind !== "safe").forEach((c) => c.sections.forEach((s) => s.checks.forEach((k) => cnt[k.status]++)));
   const total = Object.values(cnt).reduce((a, b) => a + b, 0);
   $("report-sum").textContent = `점검 항목 ${total}개 · 위험 ${cnt.danger} · 경고 ${cnt.caution} · 안전 ${cnt.safe}`
@@ -261,7 +261,15 @@ $("only-issues").addEventListener("change", renderReport);
 // ---------- QR 목적 비교 (안내문 사진 vs 실제 페이지) ----------
 function renderContext(d) {
   const c = d.context;
-  $("ctx-notice").textContent = c.notice_purpose || ({ no_context: "사진 없음", qr_only: "QR만 찍힘" }[c.status] || "읽지 못함");
+  if (c.status === "qr_only") {  // 단순 QR: 비교할 안내문이 없으므로 결과를 비워 둔다
+    $("ctx-notice").textContent = "-";
+    $("ctx-page").textContent = "-";
+    $("ctx-result").innerHTML = "";
+    $("ctx-text-box").hidden = true;
+    $("cross-box").hidden = true;
+    return;
+  }
+  $("ctx-notice").textContent = c.notice_purpose || ({ no_context: "사진 없음" }[c.status] || "읽지 못함");
   $("ctx-page").textContent = c.page_purpose || (d.ai.result ? d.ai.result.page_purpose : "-");
   let html;
   if (c.status === "ok") {

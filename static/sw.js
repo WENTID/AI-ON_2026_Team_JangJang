@@ -5,7 +5,7 @@
  * - 외부 도메인(jsQR CDN, 구글 폰트)은 가로채지 않는다.
  * 화면 파일 목록을 바꾸면 VERSION 을 올린다. 활성화될 때 옛 버전 캐시는 지워진다.
  */
-const VERSION = "v5";
+const VERSION = "v6";
 const CACHE = `qr-shell-${VERSION}`;
 const SHELL = [
   "/",

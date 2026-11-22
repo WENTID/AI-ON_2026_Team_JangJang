@@ -342,9 +342,11 @@ def analyze(snap: dict, *, use_ai: bool = True, use_db: bool = True, use_whiteli
         "notice": bool(context.get("notice_status")),
         "cross_check": cross["status"] == "error",
     }.items() if bad and unavailable.get(k)}
+    # 단순 QR(QR이 화면 대부분을 채운 사진)은 안내문이 없으므로 안내문 관련 검사 결과를 비워 둔다('-').
+    blank = {"context", "cross_check", "notice"} if context["status"] == "qr_only" else set()
     rules = hierarchy.build(verdict=verdict, phishing_verdict=phishing_verdict, risk_reasons=risk_reasons,
                             safe_reasons=final["safe_reasons"], notices=notices, unavailable=unavailable,
-                            failed=failed)
+                            failed=failed, blank=blank)
     th = final["breakdown"]["thresholds"]
     level = safe_level(final["score"], th) if phishing_verdict == "safe" else None
     action, one_liner = rules["action"], rules["one_liner"]

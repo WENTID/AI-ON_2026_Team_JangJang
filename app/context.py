@@ -140,7 +140,7 @@ def analyze_context(image_id: str | None, *, page: dict | None = None, ai_result
     # 2단계는 아래 안내문 읽기 결과(글자 수·readable)로 거른다.
     ratio = load_meta(image_id).get("qr_ratio")
     if ratio is not None and ratio >= cfg["skip_qr_ratio"]:
-        return _empty("qr_only", f"QR만 가까이 찍힌 사진이라 안내문 비교를 생략함 (QR이 화면의 {ratio:.0%})")
+        return _empty("qr_only", f"단순 QR(QR이 화면의 {ratio:.0%})이라 안내문 비교를 하지 않음")
 
     read = notice.read_notice(image_id)
     out = _empty("error", "")

@@ -11,7 +11,8 @@ DEFAULT_CRIME = "phishing"
 # 검사 항목 결과. caution 은 화면에서 '경고'로 표시한다.
 # unknown(확인 불가) = 검사를 하려 했지만 실패(접속 실패·AI 한도 등). '안전'보다 위에 두어 대분류에서 실패가 가려지지 않게 한다.
 # na(해당 없음) = 할 필요가 없던 검사(사진 없음, http라 인증서 없음 등).
-RANK = {"danger": 3, "caution": 2, "unknown": 1.5, "safe": 1, "na": 0, "phase2": 0}
+# blank(-) = 단순 QR(안내문 없이 QR만 찍은 사진)이라 안내문 관련 검사 결과를 비워 둔 것.
+RANK = {"danger": 3, "caution": 2, "unknown": 1.5, "safe": 1, "na": 0, "blank": 0, "phase2": 0}
 
 
 def crime_type(crime_id: str = DEFAULT_CRIME) -> dict:
@@ -71,7 +72,8 @@ def _item_status(i: dict) -> str:
     return "danger" if i["tier"] in ("confirmed", "strong") else "caution"
 
 
-def _check_result(p: dict, chk: dict, signals: dict, notices: dict, unavailable: dict, failed: set) -> dict:
+def _check_result(p: dict, chk: dict, signals: dict, notices: dict, unavailable: dict, failed: set,
+                  blank: set) -> dict:
     items = [_signal_item(signals[s]) for s in chk.get("signals", []) if s in signals]
     for nid in chk.get("notices", []):
         if nid not in notices:
@@ -84,6 +86,8 @@ def _check_result(p: dict, chk: dict, signals: dict, notices: dict, unavailable:
 
     if p["kind"] == "placeholder":
         status, summary = "phase2", p.get("phase2_note", "2단계 제공 예정")
+    elif chk.get("requires") in blank:
+        status, summary = "blank", "단순 QR(안내문 없이 QR만 찍은 사진)이라 검사하지 않음"
     elif items:
         status = max((_item_status(i) for i in items), key=RANK.get)
         summary = items[0]["detail"]
@@ -97,7 +101,7 @@ def _check_result(p: dict, chk: dict, signals: dict, notices: dict, unavailable:
 
 def build(*, verdict: str, phishing_verdict: str, risk_reasons: list[dict], safe_reasons: list[dict],
           notices: list[dict], unavailable: dict | None = None, failed: set | None = None,
-          crime_id: str = DEFAULT_CRIME) -> dict:
+          blank: set | None = None, crime_id: str = DEFAULT_CRIME) -> dict:
     """판정 결과를 위계에 맞춰 정리한다.
 
     risk_reasons 는 영향이 큰 순서(scoring.score 결과)여야 한다.
@@ -107,13 +111,14 @@ def build(*, verdict: str, phishing_verdict: str, risk_reasons: list[dict], safe
     ct = crime_type(crime_id)
     unavailable = unavailable or {}
     failed = failed or set()
+    blank = blank or set()  # 결과를 비워 둘('-') 검사 조건 이름 (단순 QR의 안내문 관련 검사)
     sig_by_id = {s["id"]: s for s in risk_reasons + safe_reasons}
     notice_by_id = {n["id"]: n for n in notices}
 
     report = []
     for p in ct["principles"]:
         sections = [{"name": sec["name"],
-                     "checks": [_check_result(p, c, sig_by_id, notice_by_id, unavailable, failed) for c in sec["checks"]]}
+                     "checks": [_check_result(p, c, sig_by_id, notice_by_id, unavailable, failed, blank) for c in sec["checks"]]}
                     for sec in p["sections"]]
         checks = [c for sec in sections for c in sec["checks"]]
         issues = sum(c["status"] in ("danger", "caution") for c in checks)

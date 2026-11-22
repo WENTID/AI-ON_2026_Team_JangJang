@@ -93,7 +93,7 @@ copy .env.example .env      # 그다음 .env 파일을 열어 API 키 두 개를
 - 피싱 사이트는 금방 사라지므로 수집할 때 HTML·리다이렉트·도메인·인증서·Safe Browsing 결과를 모두 저장합니다(`data/snapshots/`, Git 제외).
 - 검증은 저장본으로만 돌리므로 다시 실행해도 같은 결과가 나옵니다. AI 응답도 `data/ai_cache/`에 저장해 재사용합니다.
 
-### OCR 테스트 (2단계 준비: 안내문 사진 읽기)
+### 안내문 읽기 테스트 (Gemini 멀티모달, 스크립트 이름은 예전 이름 `ocr_test.py` 그대로)
 
 QR 안내문 사진을 Gemini가 얼마나 잘 읽는지 측정합니다. `requirements-dev.txt` 설치가 필요합니다.
 ```powershell
@@ -108,7 +108,7 @@ QR 안내문 사진을 Gemini가 얼마나 잘 읽는지 측정합니다. `requi
 
 ### Jev vs Gemini 비교 (맥락 일치 판정)
 
-`.env`에 `TYPESAFE_API_KEY`가 필요합니다. 위 OCR 테스트(`make`, `run`)를 먼저 한 번 실행해 둡니다.
+`.env`에 `TYPESAFE_API_KEY`가 필요합니다. 위 안내문 읽기 테스트(`make`, `run`)를 먼저 한 번 실행해 둡니다.
 ```powershell
 .\.venv\Scripts\python scripts\jev_test.py   # → eval/jev_results.md, 시연 페이지 data/ocr_samples/jev_viewer.html
 ```
@@ -160,7 +160,7 @@ app/            서버 코드
   page.py         HTML에서 제목·입력란·링크 등 추출
   brand.py        브랜드 유사 도메인, 페이지 속 브랜드 찾기
   ai_judge.py     Gemini 사칭 판별
-  notice.py       QR 안내문 읽기 (Gemini OCR, 사진 축소·캐시·미리 읽기)
+  notice.py       QR 안내문 읽기 (Gemini 멀티모달, 사진 축소·캐시·미리 읽기)
   context.py      QR 안내문 목적 vs 페이지 목적 비교 (Jev, 실패 시 Gemini)
   jev.py          Jev(TypeSafe) 호출
   uploads.py      카메라 프레임·업로드 사진 저장 위치
@@ -178,6 +178,6 @@ docs/           요구사항
 
 ## 8. 2단계 계획
 
-- ✅ QR 안내문 맥락 일치 분석: Gemini OCR + Jev 목적 비교 (위 5. 판정 방식). 실제 안내문 사진으로 사진 크기·기준값 확정 예정
+- ✅ QR 안내문 맥락 일치 분석: Gemini 멀티모달 안내문 읽기 + Jev 목적 비교 (위 5. 판정 방식). 실제 안내문 사진으로 사진 크기·기준값 확정 예정
 - 스크린샷 분석(Playwright + 멀티모달 LLM): 로고가 이미지로만 있는 피싱 페이지 탐지
 - 1단계 검증에서 놓친 피싱 유형 분석·보완
